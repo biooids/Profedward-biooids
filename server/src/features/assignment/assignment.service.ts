@@ -4,21 +4,22 @@ import { CreateAssignmentDto } from "./assignment.types";
 
 export class AssignmentService {
   /**
-   * Creates an assignment for a course and generates pending submissions for all enrolled students.
+   * Creates an assignment for a course and generates pending submissions
+   * for all currently enrolled students.
    * @param authorId The ID of the teacher creating the assignment.
-   * @param data The assignment details.
+   * @param data The assignment details from the request.
    */
   public async createAssignment(authorId: string, data: CreateAssignmentDto) {
     const { courseId, title, instructions, dueDate, documentId } = data;
 
-    // 1. Verify the author is a teacher of this course
+    // 1. Verify the author is a teacher of the specified course.
     const course = await prisma.course.findFirst({
       where: {
         id: courseId,
         teachers: { some: { id: authorId } },
       },
       include: {
-        students: { select: { id: true } }, // Get all student IDs
+        students: { select: { id: true } }, // Get all student IDs for this course
       },
     });
 
@@ -29,27 +30,30 @@ export class AssignmentService {
       );
     }
 
-    // Use a transaction to ensure both assignment and submissions are created
+    // 2. Use a transaction to ensure the assignment and all submissions are created together.
     return prisma.$transaction(async (tx) => {
-      // 2. Create the Assignment
+      // 3. Create the main Assignment record.
       const newAssignment = await tx.assignment.create({
         data: {
           title,
-          instructions: instructions ?? null, // <-- FIX
-          dueDate: dueDate ?? null, // <-- FIX
+          instructions: instructions ?? null,
+          dueDate: dueDate ? new Date(dueDate) : null,
           course: { connect: { id: courseId } },
           author: { connect: { id: authorId } },
           document: { connect: { id: documentId } },
         },
       });
 
-      // 3. Create a PENDING submission for each student in the course
+      // 4. If there are students in the course, create a PENDING submission for each one.
       if (course.students.length > 0) {
         const submissionData = course.students.map((student) => ({
           assignmentId: newAssignment.id,
           studentId: student.id,
-          documentId: documentId, // Initially link to the teacher's template document
+          // Initially, the submission's document is the teacher's template.
+          // A student will later create their own copy to submit.
+          documentId: documentId,
         }));
+
         await tx.submission.createMany({
           data: submissionData,
         });
