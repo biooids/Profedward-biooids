@@ -1,0 +1,88 @@
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "../api/baseQueryWithReauth";
+import {
+  Course,
+  CreateCourseDto,
+  EnrollStudentDto,
+  CourseApiResponse,
+} from "./courseTypes";
+
+export const courseApiSlice = createApi({
+  reducerPath: "courseApi",
+  baseQuery: baseQueryWithReauth,
+  tagTypes: ["Course"],
+  endpoints: (builder) => ({
+    // ADD THIS QUERY
+    getCourses: builder.query<Course[], void>({
+      query: () => "/courses",
+
+      transformResponse: (response: { data: Course[] }) => response.data,
+      providesTags: (result = []) => [
+        ...result.map(({ id }) => ({ type: "Course" as const, id })),
+        { type: "Course", id: "LIST" },
+      ],
+    }),
+
+    // Mutation to create a new course
+    createCourse: builder.mutation<Course, CreateCourseDto>({
+      query: (courseData) => ({
+        url: "/courses",
+        method: "POST",
+        body: courseData,
+      }),
+      transformResponse: (response: CourseApiResponse) => response.data,
+      invalidatesTags: [{ type: "Course", id: "LIST" }],
+    }),
+
+    // Mutation to enroll a student in a course
+    enrollStudent: builder.mutation<
+      Course,
+      { courseId: string; data: EnrollStudentDto }
+    >({
+      query: ({ courseId, data }) => ({
+        url: `/courses/${courseId}/enroll`,
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response: CourseApiResponse) => response.data,
+      invalidatesTags: (_result, _error, { courseId }) => [
+        { type: "Course", id: courseId },
+      ],
+    }),
+
+    getMyCourses: builder.query<Course[], void>({
+      query: () => "/courses/my-courses",
+      transformResponse: (response: { data: Course[] }) => response.data,
+      providesTags: (result = []) => [
+        ...result.map(({ id }) => ({ type: "Course" as const, id })),
+        { type: "Course", id: "LIST" },
+      ],
+    }),
+
+    getCourseDetailsForTeacher: builder.query<Course, string>({
+      query: (courseId) => `/courses/${courseId}/teacher-view`,
+      transformResponse: (response: { data: Course }) => response.data,
+      providesTags: (_result, _error, courseId) => [
+        { type: "Course", id: courseId },
+      ],
+    }),
+
+    getMyStudentCourses: builder.query<Course[], void>({
+      query: () => "/courses/my-courses/student",
+      transformResponse: (response: { data: Course[] }) => response.data,
+      providesTags: (result = []) => [
+        ...result.map(({ id }) => ({ type: "Course" as const, id })),
+        { type: "Course", id: "LIST" },
+      ],
+    }),
+  }),
+});
+
+export const {
+  useGetCoursesQuery, // EXPORT THE NEW HOOK
+  useCreateCourseMutation,
+  useEnrollStudentMutation,
+  useGetMyCoursesQuery, // <-- EXPORT NEW HOOK
+  useGetCourseDetailsForTeacherQuery, // <-- EXPORT NEW HOOK
+  useGetMyStudentCoursesQuery,
+} = courseApiSlice;

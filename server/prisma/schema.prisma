@@ -1,0 +1,301 @@
+// This is your Prisma schema file.
+
+generator client {
+  provider = "prisma-client-js"
+  output = "./generated/prisma" 
+  previewFeatures = ["postgresqlExtensions"]
+
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions = [vector]
+
+}
+
+
+// ==========================================
+//              Enums
+// ==========================================
+
+enum SystemRole {
+  USER
+  DEVELOPER
+  MAINTAINER
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+  GENERAL
+}
+
+enum SubmissionStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+  RESUBMITTED
+}
+
+
+
+// ==========================================
+//        Core User & Auth Models
+// ==========================================
+
+model RefreshToken {
+  jti       String   @id @unique
+  userId    String
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation("UserRefreshTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id            String      @id @default(uuid())
+  username      String      @unique
+  displayName   String?
+  email         String      @unique
+  passwordHash  String?
+  profileImage  String?      @default("https://res.cloudinary.com/djtww0vax/image/upload/v1747766773/xi-biooid_bstapi.jpg")
+  systemRole    SystemRole  @default(USER)
+  userRole      UserRole    @default(GENERAL)
+  bio           String?     @db.Text
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  ttsCharacterQuota   Int      @default(1000000) // Default for Google's neural voice free tier
+  ttsCharacterUsage   Int      @default(0)       // Counter for current month's usage
+  ttsQuotaResetDate   DateTime @default(now())    // The date the quota was last reset
+
+
+  // --- Relations ---
+  refreshTokens    RefreshToken[] @relation("UserRefreshTokens")
+  
+  // A user owns many "Shelves" for personal document organization.
+  shelves          Shelf[]        @relation("UserShelves")
+  
+  // A user uploads many individual documents.
+  uploadedDocuments Document[]     @relation("UploadedBy")
+  
+  // Academic relations
+  enrolledCourses  Course[]       @relation("CourseStudents")
+  taughtCourses    Course[]       @relation("CourseTeachers")
+  authoredAssignments Assignment[]   @relation("AuthoredBy")
+  submissions      Submission[]   @relation("StudentSubmissions")
+  corrections      Correction[]   @relation("TeacherCorrections")
+  conversations    Conversation[] @relation("UserConversations")
+
+
+  @@index([username])
+  @@index([userRole])
+}
+
+// ==========================================
+//      Documents Section ("Shelves")
+// ==========================================
+
+// A "Shelf" is a user's personal folder for organizing their documents.
+model Shelf {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Physics - Term 1"
+  createdAt DateTime @default(now())
+
+  ownerId   String
+  owner     User     @relation("UserShelves", fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  // A shelf can contain many documents.
+  documents Document[] @relation("ShelfDocuments")
+
+  @@index([ownerId])
+}
+
+// The core "Living Document" model. This represents any document in the system,
+// whether created from scratch or uploaded.
+model Document {
+  id                String    @id @default(uuid())
+  name              String    // The display name of the document, editable by the user.
+
+  // --- Editable Content (for the in-app editor) ---
+  // The document's content stored in a structured format (e.g., Tiptap's JSON).
+  // This is the source of truth for editing and for generating new PDF/DOCX downloads.
+  editableContent   Json?
+
+  // --- Original Static File (for initial uploads) ---
+  // The URL of the originally uploaded file (PDF, DOCX) on Cloudinary.
+  originalFileUrl      String?
+  // The public_id from Cloudinary for managing the asset.
+  originalFilePublicId String?
+  // The MIME type of the original file (e.g., "application/pdf").
+  originalFileType     String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Every document is uploaded by a user.
+  uploaderId        String
+  uploader          User      @relation("UploadedBy", fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  // A document can optionally belong to a personal Shelf.
+  shelfId           String?
+  shelf             Shelf?    @relation("ShelfDocuments", fields: [shelfId], references: [id])
+  
+  // A document can be attached to one of the following academic models.
+  assignment        Assignment? @relation("AssignmentDocument")
+  submission        Submission? @relation("SubmissionDocument")
+  correction        Correction? @relation("CorrectionDocument")
+  chunks DocumentChunk[] @relation("DocumentChunks")
+  conversations Conversation[] @relation("DocumentConversations")
+
+
+
+  @@index([uploaderId])
+  @@index([shelfId])
+}
+
+model DocumentChunk {
+  id         String   @id @default(uuid())
+  content    String   @db.Text
+  embedding  Unsupported("vector(768)")?
+  documentId String
+  document   Document @relation("DocumentChunks", fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+}
+
+
+// ==========================================
+//      Assignments Section
+// ==========================================
+
+model Course {
+  id          String @id @default(uuid())
+  description String? @db.Text
+  createdAt   DateTime @default(now())
+  academicLevelId String
+  academicLevel   AcademicLevel @relation(fields: [academicLevelId], references: [id])
+
+  subjectId String
+  subject   Subject       @relation(fields: [subjectId], references: [id])
+
+  students    User[]       @relation("CourseStudents")
+  teachers    User[]       @relation("CourseTeachers")
+  assignments Assignment[]
+}
+model Assignment {
+  id            String       @id @default(uuid())
+  title         String
+  instructions  String?      @db.Text
+  dueDate       DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  courseId      String
+  course        Course       @relation(fields: [courseId], references: [id])
+  
+  authorId      String
+  author        User         @relation("AuthoredBy", fields: [authorId], references: [id])
+  
+  // An assignment is based on one central document (e.g., the worksheet).
+  documentId    String       @unique
+  document      Document     @relation("AssignmentDocument", fields: [documentId], references: [id])
+
+  submissions   Submission[]
+
+  @@index([courseId])
+  @@index([authorId])
+}
+
+model Submission {
+  id            String       @id @default(uuid())
+  submittedAt   DateTime     @default(now())
+  notes         String?      @db.Text
+
+  assignmentId  String
+  assignment    Assignment   @relation(fields: [assignmentId], references: [id])
+  status        SubmissionStatus @default(PENDING) // <-- ADD THIS LINE
+
+  studentId     String
+  student       User         @relation("StudentSubmissions", fields: [studentId], references: [id])
+
+  // A student's submission consists of their version of the document.
+  documentId    String       @unique
+  document      Document     @relation("SubmissionDocument", fields: [documentId], references: [id])
+
+  correction    Correction?
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+}
+
+model Correction {
+  id            String      @id @default(uuid())
+  grade         String?
+  comments      String?     @db.Text
+  correctedAt   DateTime    @default(now())
+
+  submissionId  String      @unique
+  submission    Submission  @relation(fields: [submissionId], references: [id])
+  
+  correctorId   String
+  corrector     User        @relation("TeacherCorrections", fields: [correctorId], references: [id])
+
+  // The teacher's feedback can include a marked-up or corrected document.
+  documentId    String      @unique
+  document      Document    @relation("CorrectionDocument", fields: [documentId], references: [id])
+
+  @@index([correctorId])
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Explanation of Quantum Tunneling"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Each conversation belongs to one document and one user
+  documentId String
+  document   Document @relation("DocumentConversations", fields: [documentId], references: [id], onDelete: Cascade)
+  
+  userId     String
+  user       User     @relation("UserConversations", fields: [userId], references: [id], onDelete: Cascade)
+
+  // A conversation has many messages
+  messages   ChatMessage[]
+
+  @@index([documentId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  role      String   // "human" or "ai"
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  
+  // Each message belongs to one conversation
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+
+// ADD these two new models
+model AcademicLevel {
+  id      String   @id @default(uuid())
+  name    String   @unique // e.g., "Grade 12", "First Year University"
+  courses Course[]
+}
+
+model Subject {
+  id      String   @id @default(uuid())
+  name    String   @unique // e.g., "Physics", "World History"
+  courses Course[]
+}
