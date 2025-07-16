@@ -1,3 +1,5 @@
+//src/components/documents/view/DocumentWorkspace.tsx
+
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";

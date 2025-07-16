@@ -1,3 +1,5 @@
+import { Document } from "../document/documentTypes"; // Import the Document type
+
 // Shape of an Assignment object from the backend
 export interface Assignment {
   id: string;
@@ -8,7 +10,7 @@ export interface Assignment {
   updatedAt: string;
   courseId: string;
   authorId: string;
-  documentId: string;
+  document: Document; // CHANGE this from documentId: string
 }
 
 // DTO for creating a new assignment

@@ -7,5 +7,10 @@ const router: Router = Router();
 // A user must be logged in to create an assignment.
 // The service layer handles the specific role check (is the user a teacher of the course?).
 router.post("/", verifyToken, assignmentController.createAssignment);
+router.get(
+  "/:assignmentId",
+  verifyToken,
+  assignmentController.getAssignmentById
+);
 
 export default router;

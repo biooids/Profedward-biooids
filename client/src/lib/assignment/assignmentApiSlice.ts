@@ -9,7 +9,8 @@ import {
 export const assignmentApiSlice = createApi({
   reducerPath: "assignmentApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Assignment", "Course"], // We also tag Course to update the course detail page
+  // Define the tags this slice can invalidate
+  tagTypes: ["Assignment", "Course"],
   endpoints: (builder) => ({
     createAssignment: builder.mutation<Assignment, CreateAssignmentDto>({
       query: (assignmentData) => ({
@@ -18,13 +19,22 @@ export const assignmentApiSlice = createApi({
         body: assignmentData,
       }),
       transformResponse: (response: AssignmentApiResponse) => response.data,
-      // When an assignment is created, invalidate the course it belongs to
-      // to refetch the assignment list on the course detail page.
-      invalidatesTags: (_result, _error, { courseId }) => [
-        { type: "Course", id: courseId },
+      invalidatesTags: (_result, _error, { courseId }) => {
+        // ADD THIS LOG
+        console.log("INVALIDATING TAG:", { type: "Course", id: courseId });
+        return [{ type: "Course", id: courseId }];
+      },
+    }),
+
+    getAssignmentById: builder.query<Assignment, string>({
+      query: (assignmentId) => `/assignments/${assignmentId}`,
+      transformResponse: (response: AssignmentApiResponse) => response.data,
+      providesTags: (_result, _error, assignmentId) => [
+        { type: "Assignment", id: assignmentId },
       ],
     }),
   }),
 });
 
-export const { useCreateAssignmentMutation } = assignmentApiSlice;
+export const { useCreateAssignmentMutation, useGetAssignmentByIdQuery } =
+  assignmentApiSlice;

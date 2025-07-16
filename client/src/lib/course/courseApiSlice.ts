@@ -62,9 +62,11 @@ export const courseApiSlice = createApi({
     getCourseDetailsForTeacher: builder.query<Course, string>({
       query: (courseId) => `/courses/${courseId}/teacher-view`,
       transformResponse: (response: { data: Course }) => response.data,
-      providesTags: (_result, _error, courseId) => [
-        { type: "Course", id: courseId },
-      ],
+      providesTags: (_result, _error, courseId) => {
+        // ADD THIS LOG
+        console.log("PROVIDING TAG:", { type: "Course", id: courseId });
+        return [{ type: "Course", id: courseId }];
+      },
     }),
 
     getMyStudentCourses: builder.query<Course[], void>({

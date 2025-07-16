@@ -62,6 +62,26 @@ export class AssignmentService {
       return newAssignment;
     });
   }
+
+  /**
+   * Gets a single assignment by its ID, verifying teacher access.
+   */
+  public async getAssignmentById(assignmentId: string, teacherId: string) {
+    const assignment = await prisma.assignment.findFirst({
+      where: {
+        id: assignmentId,
+        authorId: teacherId, // Ensures only the teacher who created it can view it
+      },
+      include: {
+        document: true, // Include the associated document worksheet
+      },
+    });
+
+    if (!assignment) {
+      throw createHttpError(404, "Assignment not found or access denied.");
+    }
+    return assignment;
+  }
 }
 
 export const assignmentService = new AssignmentService();
