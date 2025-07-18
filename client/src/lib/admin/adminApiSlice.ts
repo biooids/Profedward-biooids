@@ -6,16 +6,14 @@ import { UpdateUserRoleDto, GetAllUsersApiResponse } from "./adminTypes";
 export const adminApiSlice = createApi({
   reducerPath: "adminApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["User"], // Tag for caching user data
+  tagTypes: ["UserList"], // Updated to use a simple string tag for the list
   endpoints: (builder) => ({
     // Query to get all users
     getAllUsers: builder.query<User[], void>({
       query: () => "/admin/users",
       transformResponse: (response: GetAllUsersApiResponse) => response.data,
-      providesTags: (result = []) => [
-        ...result.map(({ id }) => ({ type: "User" as const, id })),
-        { type: "User", id: "LIST" },
-      ],
+      // This provides the tag for the entire list of users.
+      providesTags: ["UserList"],
     }),
 
     // Mutation to update a user's role
@@ -28,11 +26,8 @@ export const adminApiSlice = createApi({
         method: "PATCH",
         body: data,
       }),
-      // After updating, invalidate the user list to trigger a refetch
-      invalidatesTags: (_result, _error, { userId }) => [
-        { type: "User", id: "LIST" },
-        { type: "User", id: userId },
-      ],
+      // After updating a role, invalidate the list to trigger a refetch.
+      invalidatesTags: ["UserList"],
     }),
   }),
 });

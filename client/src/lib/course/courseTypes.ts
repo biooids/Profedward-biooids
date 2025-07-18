@@ -47,3 +47,14 @@ export interface CourseApiResponse {
   message: string;
   data: Course;
 }
+
+export interface CreateCourseDto {
+  academicLevelId: string;
+  subjectId: string;
+  teacherId: string;
+  description?: string;
+}
+
+export interface SetStudentEnrollmentDto {
+  courseIds: string[];
+}

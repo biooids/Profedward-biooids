@@ -33,6 +33,18 @@ class AssignmentController {
     );
     res.status(200).json({ status: "success", data: assignment });
   });
+
+  getAssignmentForStudent = asyncHandler(
+    async (req: Request, res: Response) => {
+      const studentId = req.user!.id;
+      const { assignmentId } = req.params;
+      const assignment = await assignmentService.getAssignmentForStudent(
+        assignmentId,
+        studentId
+      );
+      res.status(200).json({ status: "success", data: assignment });
+    }
+  );
 }
 
 export const assignmentController = new AssignmentController();

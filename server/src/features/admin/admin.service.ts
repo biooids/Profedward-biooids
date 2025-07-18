@@ -1,39 +1,37 @@
 import prisma from "../../db/prisma";
 import { createHttpError } from "../../utils/error.factory";
-import { User, UserRole } from "prisma/generated/prisma";
+import { User, UserRole } from "prisma/generated/prisma"; // Use @prisma/client
 
 export class AdminService {
   /**
-   * Fetches a paginated list of all users.
+   * Fetches a paginated list of all users, including their enrolled courses.
    */
-  public async getAllUsers(): Promise<Omit<User, "passwordHash">[]> {
+  public async getAllUsers() {
     const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        email: true,
-        profileImage: true,
-        systemRole: true,
-        userRole: true,
-        bio: true,
-        createdAt: true,
-        updatedAt: true,
-        ttsCharacterQuota: true,
-        ttsCharacterUsage: true,
-        ttsQuotaResetDate: true,
+      // --- THIS IS THE FIX ---
+      // We change from 'select' to 'include' to fetch related data.
+      include: {
+        enrolledCourses: {
+          // We only need the ID of the courses for our modal
+          select: {
+            id: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
       },
     });
-    return users;
+
+    // Manually remove the passwordHash from each user object before returning
+    return users.map((user) => {
+      const { passwordHash, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
   }
 
   /**
    * Updates a specific user's role.
-   * @param userId The ID of the user to update.
-   * @param newRole The new role to assign.
    */
   public async updateUserRole(
     userId: string,

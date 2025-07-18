@@ -9,3 +9,7 @@ export interface CreateCourseDto {
 export interface EnrollStudentDto {
   studentId: string;
 }
+
+export interface SetStudentEnrollmentDto {
+  courseIds: string[]; // An array of all course IDs the student should be enrolled in
+}

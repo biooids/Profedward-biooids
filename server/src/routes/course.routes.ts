@@ -27,4 +27,16 @@ router.post(
   courseController.enrollStudent
 );
 
+router.get(
+  "/:courseId/student-view",
+  verifyToken,
+  courseController.getCourseDetailsForStudent
+);
+router.put(
+  "/enrollments/:studentId",
+  verifyToken,
+  verifyAdmin,
+  courseController.setStudentEnrollments
+);
+
 export default router;

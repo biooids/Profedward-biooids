@@ -82,6 +82,37 @@ export class AssignmentService {
     }
     return assignment;
   }
+
+  /**
+   * Gets a single assignment by its ID, verifying student enrollment.
+   */
+  public async getAssignmentForStudent(
+    assignmentId: string,
+    studentId: string
+  ) {
+    const assignment = await prisma.assignment.findFirst({
+      where: {
+        id: assignmentId,
+        course: {
+          // Verify the student is in the assignment's course
+          students: {
+            some: { id: studentId },
+          },
+        },
+      },
+      include: {
+        document: true, // The original assignment worksheet
+      },
+    });
+
+    if (!assignment) {
+      throw createHttpError(
+        404,
+        "Assignment not found or you do not have access."
+      );
+    }
+    return assignment;
+  }
 }
 
 export const assignmentService = new AssignmentService();

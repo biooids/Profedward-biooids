@@ -1,6 +1,10 @@
 import prisma from "../../db/prisma";
 import { createHttpError } from "../../utils/error.factory";
-import { GradeSubmissionDto, GetSubmissionsQueryDto } from "./submission.types";
+import {
+  GradeSubmissionDto,
+  GetSubmissionsQueryDto,
+  SubmitWorkDto,
+} from "./submission.types";
 import { Prisma, SubmissionStatus } from "prisma/generated/prisma";
 
 export class SubmissionService {
@@ -98,6 +102,138 @@ export class SubmissionService {
       });
 
       return { newCorrection, updatedSubmission };
+    });
+  }
+
+  /**
+   * Gets all submissions for a specific student.
+   * @param studentId The ID of the logged-in student.
+   * @param query Query parameters for filtering by status.
+   */
+  public async getSubmissionsForStudent(
+    studentId: string,
+    query: GetSubmissionsQueryDto
+  ) {
+    // 1. Create the base 'where' clause
+    const where: Prisma.SubmissionWhereInput = {
+      studentId: studentId,
+    };
+
+    // 2. Conditionally add the status if it exists in the query
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    return prisma.submission.findMany({
+      where, // 3. Use the new, conditionally built 'where' object
+      include: {
+        assignment: {
+          include: {
+            course: {
+              include: {
+                subject: true,
+                academicLevel: true,
+              },
+            },
+          },
+        },
+        correction: true,
+      },
+      orderBy: {
+        assignment: {
+          dueDate: "asc",
+        },
+      },
+    });
+  }
+
+  /**
+   * Allows a student to submit their work for an assignment.
+   * @param submissionId The ID of their pending submission record.
+   * @param studentId The ID of the student submitting.
+   * @param data The submission data, including the document ID.
+   */
+  public async submitWork(
+    submissionId: string,
+    studentId: string,
+    data: SubmitWorkDto
+  ) {
+    // 1. Find the original submission record
+    const submission = await prisma.submission.findFirst({
+      where: {
+        id: submissionId,
+        studentId: studentId, // Ensure the student owns this submission
+      },
+    });
+
+    if (!submission) {
+      throw createHttpError(
+        404,
+        "Submission record not found or access denied."
+      );
+    }
+
+    if (
+      submission.status !== "PENDING" &&
+      submission.status !== "RESUBMITTED"
+    ) {
+      throw createHttpError(
+        400,
+        "This assignment has already been submitted or graded."
+      );
+    }
+
+    // 2. Update the submission with the new document and status
+    return prisma.submission.update({
+      where: {
+        id: submissionId,
+      },
+      data: {
+        documentId: data.documentId,
+        notes: data.notes ?? null,
+        status: "SUBMITTED",
+        submittedAt: new Date(), // Update the submission timestamp
+      },
+    });
+  }
+
+  /**
+   * [STUDENT] Gets all courses that have pending submissions for a student,
+   * with the pending submissions included.
+   */
+  public async getPendingAssignmentsByCourse(studentId: string) {
+    return prisma.course.findMany({
+      where: {
+        students: { some: { id: studentId } },
+        assignments: {
+          some: {
+            submissions: {
+              some: {
+                studentId: studentId,
+                status: "PENDING",
+              },
+            },
+          },
+        },
+      },
+      // --- THIS IS THE FIX ---
+      // We must go through the 'assignments' relation first.
+      include: {
+        subject: true,
+        academicLevel: true,
+        assignments: {
+          // Then, for each assignment, we include its submissions...
+          include: {
+            submissions: {
+              // ...but only the pending ones for this specific student.
+              where: {
+                studentId: studentId,
+                status: "PENDING",
+              },
+            },
+          },
+        },
+      },
     });
   }
 }

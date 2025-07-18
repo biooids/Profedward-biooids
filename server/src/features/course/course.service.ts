@@ -1,7 +1,11 @@
 import prisma from "../../db/prisma";
 import { createHttpError } from "../../utils/error.factory";
 import { UserRole } from "prisma/generated/prisma";
-import { CreateCourseDto, EnrollStudentDto } from "./course.types";
+import {
+  CreateCourseDto,
+  EnrollStudentDto,
+  SetStudentEnrollmentDto,
+} from "./course.types";
 
 export class CourseService {
   /**
@@ -149,6 +153,73 @@ export class CourseService {
         { academicLevel: { name: "asc" } },
         { subject: { name: "asc" } },
       ],
+    });
+  }
+
+  /**
+   * Gets details for a single course, verifying student enrollment.
+   * @param courseId The ID of the course.
+   * @param studentId The ID of the student requesting access.
+   */
+  public async getCourseDetailsForStudent(courseId: string, studentId: string) {
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        students: {
+          // Verify the student is in this course
+          some: { id: studentId },
+        },
+      },
+      include: {
+        academicLevel: true,
+        subject: true,
+        teachers: {
+          select: { id: true, displayName: true, profileImage: true },
+        },
+        assignments: {
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+
+    if (!course) {
+      throw createHttpError(404, "Course not found or you are not enrolled.");
+    }
+    return course;
+  }
+
+  /**
+   * [ADMIN] Sets the complete list of courses a student is enrolled in.
+   * This will overwrite any previous enrollments for the student.
+   * @param studentId The ID of the student to enroll.
+   * @param data The DTO containing an array of course IDs.
+   */
+  public async setStudentEnrollments(
+    studentId: string,
+    data: SetStudentEnrollmentDto
+  ) {
+    const { courseIds } = data;
+
+    // 1. Verify the user is actually a student
+    const student = await prisma.user.findUnique({ where: { id: studentId } });
+    if (!student || student.userRole !== UserRole.STUDENT) {
+      throw createHttpError(404, "Student not found or user is not a student.");
+    }
+
+    // 2. Use a transaction to first disconnect all existing courses and then connect the new ones.
+    // This is the safest way to handle updates, additions, and removals in one operation.
+    return prisma.user.update({
+      where: { id: studentId },
+      data: {
+        enrolledCourses: {
+          // The 'set' operation disconnects all previous relations
+          // and connects only the ones provided in the array.
+          set: courseIds.map((id) => ({ id })),
+        },
+      },
+      include: {
+        enrolledCourses: true, // Return the new list of courses for confirmation
+      },
     });
   }
 }

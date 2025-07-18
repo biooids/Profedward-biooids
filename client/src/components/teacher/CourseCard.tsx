@@ -10,15 +10,21 @@ import {
 } from "@/components/ui/card";
 import { Users, FileText } from "lucide-react";
 import { Course } from "@/lib/course/courseTypes";
+import { UserRole } from "@/lib/user/userTypes"; // Import UserRole enum
 
 interface CourseCardProps {
   course: Course;
+  userRole?: UserRole; // Accept the user's role as a prop
 }
 
-export default function CourseCard({ course }: CourseCardProps) {
+export default function CourseCard({ course, userRole }: CourseCardProps) {
   // --- THIS IS THE FIX ---
-  // The link now points to the correct teacher-specific detail page.
-  const courseDetailUrl = `/courses/${course.id}/teacher-view`;
+  // The link is now dynamic based on the user's role.
+  // It defaults to the student view if the role is not provided.
+  const courseDetailUrl =
+    userRole === UserRole.TEACHER
+      ? `/courses/${course.id}/teacher-view`
+      : `/courses/${course.id}/student-view`;
 
   return (
     <Link href={courseDetailUrl}>

@@ -23,6 +23,7 @@ export interface User {
   bio: string | null;
   createdAt: string;
   updatedAt: string;
+  enrolledCourses?: { id: string }[];
 }
 
 /**

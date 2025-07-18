@@ -4,13 +4,17 @@ import { verifyToken } from "../middleware/auth.middleware";
 
 const router: Router = Router();
 
-// A user must be logged in to create an assignment.
-// The service layer handles the specific role check (is the user a teacher of the course?).
-router.post("/", verifyToken, assignmentController.createAssignment);
+// A user must be logged in to access these routes.
+router.use(verifyToken);
+
+// Teacher creates an assignment
+router.post("/", assignmentController.createAssignment);
+
+// Teacher and Student can both get an assignment's details
+router.get("/:assignmentId/teacher", assignmentController.getAssignmentById);
 router.get(
-  "/:assignmentId",
-  verifyToken,
-  assignmentController.getAssignmentById
+  "/:assignmentId/student",
+  assignmentController.getAssignmentForStudent
 );
 
 export default router;

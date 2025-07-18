@@ -1,18 +1,19 @@
 "use client";
 
-import { useGetMyCoursesQuery } from "@/lib/course/courseApiSlice";
-import { useGetMyStudentCoursesQuery } from "@/lib/course/courseApiSlice"; // <-- Import new hook
-import { useSession } from "next-auth/react"; // <-- Import useSession
+import {
+  useGetMyCoursesQuery,
+  useGetMyStudentCoursesQuery,
+} from "@/lib/course/courseApiSlice";
+import { useSession } from "next-auth/react";
 import { UserRole } from "@/lib/user/userTypes";
 import { Loader2 } from "lucide-react";
-import CourseCard from "./CourseCard"; // We can reuse the CourseCard
+import CourseCard from "../teacher/CourseCard"; // Updated path if you moved it
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function MyCoursesDashboard() {
   const { data: session } = useSession();
   const userRole = session?.user?.userRole;
 
-  // Conditionally call the correct hook based on the user's role
   const {
     data: teacherCourses,
     isLoading: isTeacherLoading,
@@ -55,11 +56,12 @@ export default function MyCoursesDashboard() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {courses?.map((course) => (
-        <CourseCard key={course.id} course={course} />
+        // THIS IS THE FIX: We pass the user's role to each card
+        <CourseCard key={course.id} course={course} userRole={userRole} />
       ))}
       {courses?.length === 0 && (
-        <p className="text-muted-foreground col-span-full">
-          You are not yet enrolled in any courses.
+        <p className="text-muted-foreground col-span-full text-center py-10">
+          You are not yet enrolled in or assigned to any courses.
         </p>
       )}
     </div>

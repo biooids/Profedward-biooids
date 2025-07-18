@@ -5,12 +5,14 @@ import {
   CreateCourseDto,
   EnrollStudentDto,
   CourseApiResponse,
+  SetStudentEnrollmentDto,
 } from "./courseTypes";
 
 export const courseApiSlice = createApi({
   reducerPath: "courseApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Course"],
+  tagTypes: ["Course", "UserList"],
+
   endpoints: (builder) => ({
     // ADD THIS QUERY
     getCourses: builder.query<Course[], void>({
@@ -77,6 +79,28 @@ export const courseApiSlice = createApi({
         { type: "Course", id: "LIST" },
       ],
     }),
+
+    getCourseDetailsForStudent: builder.query<Course, string>({
+      query: (courseId) => `/courses/${courseId}/student-view`,
+      transformResponse: (response: { data: Course }) => response.data,
+      providesTags: (_result, _error, courseId) => [
+        { type: "Course", id: courseId },
+      ],
+    }),
+
+    setStudentEnrollments: builder.mutation<
+      Course[],
+      { studentId: string; data: SetStudentEnrollmentDto }
+    >({
+      query: ({ studentId, data }) => ({
+        url: `/courses/enrollments/${studentId}`,
+        method: "PUT",
+        body: data,
+      }),
+      // After updating enrollments, refetch the main course list
+      // to update student counts on the admin dashboard.
+      invalidatesTags: [{ type: "Course", id: "LIST" }, "UserList"],
+    }),
   }),
 });
 
@@ -87,4 +111,6 @@ export const {
   useGetMyCoursesQuery, // <-- EXPORT NEW HOOK
   useGetCourseDetailsForTeacherQuery, // <-- EXPORT NEW HOOK
   useGetMyStudentCoursesQuery,
+  useGetCourseDetailsForStudentQuery,
+  useSetStudentEnrollmentsMutation,
 } = courseApiSlice;

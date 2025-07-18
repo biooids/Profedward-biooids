@@ -57,9 +57,14 @@ export default function AssignmentView({
     try {
       await updateDocument({
         documentId: assignment.document.id,
-        data: { content: editorContent },
+        data: {
+          // --- THIS IS THE FIX ---
+          // Send the original document name along with the content.
+          name: assignment.document.name,
+          content: editorContent,
+        },
       }).unwrap();
-      setIsDirty(false); // Reset dirty state after saving
+      setIsDirty(false);
     } catch (error) {
       console.error("Failed to save changes:", error);
     }
