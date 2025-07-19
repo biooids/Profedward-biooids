@@ -17,4 +17,9 @@ router.get(
   assignmentController.getAssignmentForStudent
 );
 
+router.get(
+  "/student/pending",
+  assignmentController.getPendingAssignmentsForStudent
+);
+
 export default router;

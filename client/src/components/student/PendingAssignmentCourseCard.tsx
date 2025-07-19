@@ -15,14 +15,15 @@ export default function PendingAssignmentCourseCard({
 }: {
   course: any;
 }) {
-  const courseName = `${course.academicLevel.name} - ${course.subject.name}`;
+  // --- ADD THIS CONSOLE.LOG ---
+  // This will show the data for the entire course card in your browser console.
+  console.log("PendingAssignmentCourseCard received data:", course);
+  console.log("PendingAssignmentCourseCard received course data:", course);
 
+  const courseName = `${course.academicLevel.name} - ${course.subject.name}`;
   // --- THIS IS THE FIX ---
-  // We now flatten the nested submissions into a single list to display.
-  // This gets all the pending submissions for this course.
-  const pendingSubmissions = course.assignments.flatMap(
-    (a: any) => a.submissions
-  );
+  // Get the teacher's name from the course data.
+  const teacherName = course.teachers[0]?.displayName || "N/A";
 
   return (
     <Card>
@@ -31,20 +32,21 @@ export default function PendingAssignmentCourseCard({
           <Book className="h-6 w-6 text-primary" />
           <div>
             <CardTitle>{courseName}</CardTitle>
+            {/* Display the teacher's name here */}
             <CardDescription>
-              {pendingSubmissions.length} pending assignment(s)
+              {course.submissions.length} pending assignment(s) • Taught by{" "}
+              {teacherName}
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {pendingSubmissions.map((sub: any) => (
+          {course.submissions.map((sub: any) => (
             <Link key={sub.id} href={`/student/submission/${sub.id}`}>
               <div className="flex items-center p-3 rounded-lg hover:bg-muted transition-colors">
                 <FileText className="h-5 w-5 mr-3 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1">
-                  {/* The assignment title is now nested inside the submission */}
                   <p className="font-medium">{sub.assignment.title}</p>
                 </div>
                 <p className="text-xs text-muted-foreground ml-4 text-right">

@@ -9,17 +9,17 @@ export class AssignmentService {
    * @param authorId The ID of the teacher creating the assignment.
    * @param data The assignment details from the request.
    */
+  /**
+   * Creates an assignment for a course.
+   * (It no longer needs to create submissions, as that is handled on-demand).
+   */
   public async createAssignment(authorId: string, data: CreateAssignmentDto) {
     const { courseId, title, instructions, dueDate, documentId } = data;
 
-    // 1. Verify the author is a teacher of the specified course.
     const course = await prisma.course.findFirst({
       where: {
         id: courseId,
         teachers: { some: { id: authorId } },
-      },
-      include: {
-        students: { select: { id: true } }, // Get all student IDs for this course
       },
     });
 
@@ -30,39 +30,18 @@ export class AssignmentService {
       );
     }
 
-    // 2. Use a transaction to ensure the assignment and all submissions are created together.
-    return prisma.$transaction(async (tx) => {
-      // 3. Create the main Assignment record.
-      const newAssignment = await tx.assignment.create({
-        data: {
-          title,
-          instructions: instructions ?? null,
-          dueDate: dueDate ? new Date(dueDate) : null,
-          course: { connect: { id: courseId } },
-          author: { connect: { id: authorId } },
-          document: { connect: { id: documentId } },
-        },
-      });
-
-      // 4. If there are students in the course, create a PENDING submission for each one.
-      if (course.students.length > 0) {
-        const submissionData = course.students.map((student) => ({
-          assignmentId: newAssignment.id,
-          studentId: student.id,
-          // Initially, the submission's document is the teacher's template.
-          // A student will later create their own copy to submit.
-          documentId: documentId,
-        }));
-
-        await tx.submission.createMany({
-          data: submissionData,
-        });
-      }
-
-      return newAssignment;
+    // Now it only needs to create the assignment itself. Much simpler!
+    return prisma.assignment.create({
+      data: {
+        title,
+        instructions: instructions ?? null,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        course: { connect: { id: courseId } },
+        author: { connect: { id: authorId } },
+        document: { connect: { id: documentId } },
+      },
     });
   }
-
   /**
    * Gets a single assignment by its ID, verifying teacher access.
    */
@@ -112,6 +91,63 @@ export class AssignmentService {
       );
     }
     return assignment;
+  }
+
+  /**
+   * [STUDENT] Gets all assignments from all of a student's courses
+   * that they have not yet submitted.
+   */
+  /**
+   * [STUDENT] Gets all assignments from all of a student's courses
+   * that they have not yet submitted.
+   */
+  /**
+   * [STUDENT] Gets all assignments from all of a student's courses
+   * that they have not yet submitted.
+   */
+  public async getPendingAssignmentsForStudent(studentId: string) {
+    return prisma.assignment.findMany({
+      where: {
+        // Find assignments from courses the student is in
+        course: {
+          students: { some: { id: studentId } },
+        },
+        // AND where a submission record for this student does NOT exist
+        // with a status of SUBMITTED or GRADED
+        NOT: {
+          submissions: {
+            some: {
+              studentId: studentId,
+              status: { in: ["SUBMITTED", "GRADED"] },
+            },
+          },
+        },
+      },
+      // Include all the data needed for the frontend display
+      include: {
+        // We need the student's specific submission record to get its ID for the link
+        submissions: {
+          where: {
+            studentId: studentId,
+            status: "PENDING",
+          },
+        },
+        course: {
+          include: {
+            subject: true,
+            academicLevel: true,
+            teachers: {
+              select: {
+                displayName: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        dueDate: "asc",
+      },
+    });
   }
 }
 

@@ -40,11 +40,18 @@ export const assignmentApiSlice = createApi({
         { type: "Assignment", id: assignmentId },
       ],
     }),
+
+    getPendingAssignments: builder.query<Assignment[], void>({
+      query: () => "/assignments/student/pending",
+      transformResponse: (response: { data: Assignment[] }) => response.data,
+      providesTags: ["Assignment"], // Provides a general tag
+    }),
   }),
 });
 
 export const {
   useCreateAssignmentMutation,
   useGetAssignmentByIdQuery,
-  useGetAssignmentForStudentQuery, // <-- EXPORT NEW HOOK
+  useGetAssignmentForStudentQuery,
+  useGetPendingAssignmentsQuery,
 } = assignmentApiSlice;

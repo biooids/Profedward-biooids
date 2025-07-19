@@ -11,6 +11,12 @@ export interface Assignment {
   courseId: string;
   authorId: string;
   document: Document; // CHANGE this from documentId: string
+  course: {
+    subject: { name: string };
+    academicLevel: { name: string };
+    teachers: { displayName: string | null }[];
+  };
+  submissions: { id: string }[];
 }
 
 // DTO for creating a new assignment

@@ -25,7 +25,7 @@ export default function StudentSubmissionList({
   if (!submissions || submissions.length === 0) {
     return (
       <p className="text-sm text-center py-10 text-muted-foreground">
-        No assignments found in this category.
+        No submissions found in this category.
       </p>
     );
   }

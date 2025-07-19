@@ -16,15 +16,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
-const statusStyles = {
+const statusStyles: Record<SubmissionStatus, string> = {
   [SubmissionStatus.PENDING]:
-    "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
+    "bg-yellow-500/10 text-yellow-700 border-yellow-500/20 hover:bg-yellow-500/20",
   [SubmissionStatus.SUBMITTED]:
-    "bg-blue-500/10 text-blue-700 border-blue-500/20",
+    "bg-blue-500/10 text-blue-700 border-blue-500/20 hover:bg-blue-500/20",
   [SubmissionStatus.GRADED]:
-    "bg-green-500/10 text-green-700 border-green-500/20",
+    "bg-green-500/10 text-green-700 border-green-500/20 hover:bg-green-500/20",
   [SubmissionStatus.RESUBMITTED]:
-    "bg-purple-500/10 text-purple-700 border-purple-500/20",
+    "bg-purple-500/10 text-purple-700 border-purple-500/20 hover:bg-purple-500/20",
 };
 
 export default function SubmissionCard({
@@ -33,6 +33,8 @@ export default function SubmissionCard({
   submission: StudentSubmission;
 }) {
   const courseName = `${submission.assignment.course.academicLevel.name} - ${submission.assignment.course.subject.name}`;
+  const teacherName =
+    submission.assignment.course.teachers[0]?.displayName || "N/A";
   const linkHref = `/student/submission/${submission.id}`;
 
   return (
@@ -49,13 +51,13 @@ export default function SubmissionCard({
             <CardTitle className="mt-2">
               {submission.assignment.title}
             </CardTitle>
-            <CardDescription>{courseName}</CardDescription>
+            <CardDescription>
+              {courseName} • Taught by {teacherName}
+            </CardDescription>
           </div>
           <Button variant="outline" size="sm" asChild>
             <Link href={linkHref}>
-              {submission.status === "PENDING"
-                ? "Start Assignment"
-                : "View Submission"}
+              {"View Submission"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

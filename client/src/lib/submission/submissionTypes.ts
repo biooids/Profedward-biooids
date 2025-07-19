@@ -39,10 +39,13 @@ export interface StudentSubmission {
     id: string;
     title: string;
     dueDate: string | null;
+    document: Document; // <-- ADD THIS LINE
+
     course: {
       id: string;
       subject: { name: string };
       academicLevel: { name: string };
+      teachers: { displayName: string | null }[]; // <-- ADD THIS LINE
     };
   };
   correction: {

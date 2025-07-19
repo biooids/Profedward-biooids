@@ -45,6 +45,15 @@ class AssignmentController {
       res.status(200).json({ status: "success", data: assignment });
     }
   );
+
+  getPendingAssignmentsForStudent = asyncHandler(
+    async (req: Request, res: Response) => {
+      const studentId = req.user!.id;
+      const assignments =
+        await assignmentService.getPendingAssignmentsForStudent(studentId);
+      res.status(200).json({ status: "success", data: assignments });
+    }
+  );
 }
 
 export const assignmentController = new AssignmentController();

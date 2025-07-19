@@ -110,38 +110,50 @@ export class SubmissionService {
    * @param studentId The ID of the logged-in student.
    * @param query Query parameters for filtering by status.
    */
+  /**
+   * [STUDENT] Gets all submissions for a student.
+   * This now includes a "find or create" logic to handle late enrollments.
+   */
+  /**
+   * [STUDENT] Gets all submissions for a student.
+   * This now includes a "find or create" logic to handle late enrollments.
+   */
   public async getSubmissionsForStudent(
     studentId: string,
     query: GetSubmissionsQueryDto
   ) {
-    // 1. Create the base 'where' clause
     const where: Prisma.SubmissionWhereInput = {
       studentId: studentId,
     };
-
-    // 2. Conditionally add the status if it exists in the query
     if (query.status) {
       where.status = query.status;
     }
 
     return prisma.submission.findMany({
-      where, // 3. Use the new, conditionally built 'where' object
+      where,
       include: {
         assignment: {
           include: {
+            document: true,
             course: {
               include: {
                 subject: true,
                 academicLevel: true,
+                teachers: {
+                  select: {
+                    displayName: true,
+                  },
+                },
               },
             },
           },
         },
         correction: true,
       },
+      // This is the completed orderBy clause
       orderBy: {
         assignment: {
-          dueDate: "asc",
+          dueDate: "asc", // Show assignments due soonest first
         },
       },
     });
@@ -200,13 +212,20 @@ export class SubmissionService {
   /**
    * [STUDENT] Gets all courses that have pending submissions for a student,
    * with the pending submissions included.
+   */ /**
+   * [STUDENT] Gets all courses that have pending submissions for a student,
+   * with the pending submissions included.
    */
   public async getPendingAssignmentsByCourse(studentId: string) {
     return prisma.course.findMany({
+      // Find courses where...
       where: {
+        // 1. The student is enrolled
         students: { some: { id: studentId } },
+        // 2. And the course has at least one assignment...
         assignments: {
           some: {
+            // ...that has a PENDING submission for this student.
             submissions: {
               some: {
                 studentId: studentId,
@@ -216,13 +235,18 @@ export class SubmissionService {
           },
         },
       },
-      // --- THIS IS THE FIX ---
-      // We must go through the 'assignments' relation first.
+      // Include all the details we need for the UI
       include: {
         subject: true,
         academicLevel: true,
+        teachers: {
+          select: {
+            displayName: true,
+          },
+        },
+        // The relation on Course is 'assignments', not 'submissions'
         assignments: {
-          // Then, for each assignment, we include its submissions...
+          // For each assignment, include its submissions...
           include: {
             submissions: {
               // ...but only the pending ones for this specific student.

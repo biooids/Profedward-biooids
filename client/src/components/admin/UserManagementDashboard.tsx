@@ -95,7 +95,8 @@ export default function UserManagementDashboard() {
                     </Avatar>
                     <div>
                       <p className="font-medium">
-                        {user.displayName || user.username}
+                        {/* {user.displayName || user.username} */}
+                        { user.username}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {user.email}
