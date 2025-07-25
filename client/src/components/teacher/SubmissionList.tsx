@@ -1,3 +1,5 @@
+//src/components/teacher/SubmissionList.tsx
+
 "use client";
 
 import { useGetTeacherSubmissionsQuery } from "@/lib/submission/submissionApiSlice";

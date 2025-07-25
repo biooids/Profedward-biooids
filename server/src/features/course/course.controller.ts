@@ -5,7 +5,9 @@ import {
   CreateCourseDto,
   EnrollStudentDto,
   SetStudentEnrollmentDto,
+  UpdateCourseDetailsDto,
 } from "./course.types";
+import { createHttpError } from "@/utils/error.factory";
 
 class CourseController {
   createCourse = asyncHandler(async (req: Request, res: Response) => {
@@ -56,7 +58,7 @@ class CourseController {
     res.status(200).json({ status: "success", data: courses });
   });
 
-  getAllCourses = asyncHandler(async (req: Request, res: Response) => {
+  getAllCourses = asyncHandler(async (_req: Request, res: Response) => {
     const courses = await courseService.getAllCourses();
     res.status(200).json({ status: "success", data: courses });
   });
@@ -86,6 +88,32 @@ class CourseController {
       status: "success",
       message: "Student enrollments updated successfully.",
       data: updatedUser.enrolledCourses,
+    });
+  });
+
+  /**
+   * [TEACHER] Handle request to update course details.
+   */
+  updateCourseDetails = asyncHandler(async (req: Request, res: Response) => {
+    const { courseId } = req.params;
+    const teacherId = req.user?.id;
+
+    if (!teacherId) {
+      throw createHttpError(401, "User not authenticated.");
+    }
+
+    const courseData = req.body as UpdateCourseDetailsDto;
+
+    const updatedCourse = await courseService.updateCourseDetails(
+      courseId,
+      teacherId,
+      courseData
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: "Course details updated successfully.",
+      data: updatedCourse,
     });
   });
 }

@@ -1,3 +1,5 @@
+//src/components/admin/EnrollStudentModal.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";

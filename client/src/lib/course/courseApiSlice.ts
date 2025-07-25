@@ -6,6 +6,7 @@ import {
   EnrollStudentDto,
   CourseApiResponse,
   SetStudentEnrollmentDto,
+  UpdateCourseDetailsDto,
 } from "./courseTypes";
 
 export const courseApiSlice = createApi({
@@ -101,16 +102,31 @@ export const courseApiSlice = createApi({
       // to update student counts on the admin dashboard.
       invalidatesTags: [{ type: "Course", id: "LIST" }, "UserList"],
     }),
+
+    updateCourseDetails: builder.mutation<
+      Course,
+      { courseId: string; data: UpdateCourseDetailsDto }
+    >({
+      query: ({ courseId, data }) => ({
+        url: `/courses/${courseId}/details`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { courseId }) => [
+        { type: "Course", id: courseId },
+      ],
+    }),
   }),
 });
 
 export const {
-  useGetCoursesQuery, // EXPORT THE NEW HOOK
+  useGetCoursesQuery,
   useCreateCourseMutation,
   useEnrollStudentMutation,
-  useGetMyCoursesQuery, // <-- EXPORT NEW HOOK
-  useGetCourseDetailsForTeacherQuery, // <-- EXPORT NEW HOOK
+  useGetMyCoursesQuery,
+  useGetCourseDetailsForTeacherQuery,
   useGetMyStudentCoursesQuery,
   useGetCourseDetailsForStudentQuery,
   useSetStudentEnrollmentsMutation,
+  useUpdateCourseDetailsMutation,
 } = courseApiSlice;

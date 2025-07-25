@@ -1,3 +1,4 @@
+//src/app/courses/[courseId]/teacher-view/page.tsx
 import CourseDetailView from "@/components/teacher/CourseDetailView";
 
 interface TeacherCourseDetailPageProps {

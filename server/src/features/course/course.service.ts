@@ -1,10 +1,13 @@
 import prisma from "../../db/prisma";
 import { createHttpError } from "../../utils/error.factory";
 import { UserRole } from "prisma/generated/prisma";
+import { Prisma } from "prisma/generated/prisma"; // <-- ADD THIS IMPORT
+
 import {
   CreateCourseDto,
   EnrollStudentDto,
   SetStudentEnrollmentDto,
+  UpdateCourseDetailsDto,
 } from "./course.types";
 
 export class CourseService {
@@ -121,6 +124,7 @@ export class CourseService {
         assignments: {
           orderBy: { createdAt: "desc" },
         },
+        teachers: true,
       },
     });
 
@@ -220,6 +224,67 @@ export class CourseService {
       include: {
         enrolledCourses: true, // Return the new list of courses for confirmation
       },
+    });
+  }
+
+  /**
+   * [TEACHER] Updates the details/syllabus for a specific course.
+   * Verifies that the user making the request is a teacher for that course.
+   * @param courseId The ID of the course to update.
+   * @param teacherId The ID of the user making the request.
+   * @param data The new details for the course.
+   */
+  public async updateCourseDetails(
+    courseId: string,
+    teacherId: string,
+    data: UpdateCourseDetailsDto
+  ) {
+    // 1. Verify permission (no changes here)
+    const course = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        teachers: {
+          some: { id: teacherId },
+        },
+      },
+    });
+
+    if (!course) {
+      throw createHttpError(
+        403,
+        "Course not found or you do not have permission to edit it."
+      );
+    }
+
+    // 2. Build the update payload conditionally
+    const updatePayload: Prisma.CourseUpdateInput = {};
+
+    if (data.description !== undefined) {
+      updatePayload.description = data.description;
+    }
+    if (data.teacherMethodology !== undefined) {
+      updatePayload.teacherMethodology = data.teacherMethodology;
+    }
+    if (data.teacherContactInfo !== undefined) {
+      updatePayload.teacherContactInfo = data.teacherContactInfo;
+    }
+
+    // --- THIS IS THE FIX ---
+    // Handle the JSON 'resources' field correctly
+    if (data.resources !== undefined) {
+      if (data.resources === null) {
+        // To set a JSON field to null, use Prisma.JsonNull
+        updatePayload.resources = Prisma.JsonNull;
+      } else {
+        // For any other valid JSON value, assign it directly
+        updatePayload.resources = data.resources;
+      }
+    }
+
+    // 3. Update the course with the provided fields
+    return prisma.course.update({
+      where: { id: courseId },
+      data: updatePayload,
     });
   }
 }

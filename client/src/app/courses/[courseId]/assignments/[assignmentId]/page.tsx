@@ -1,3 +1,5 @@
+//src/app/courses/[courseId]/assignments/[assignmentId]/page.tsx
+
 import AssignmentView from "@/components/teacher/AssignmentView";
 
 interface PageProps {

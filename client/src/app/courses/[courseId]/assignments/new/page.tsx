@@ -1,3 +1,5 @@
+//src/app/courses/[courseId]/assignments/new/page.tsx
+
 import CreateAssignmentWorkflow from "@/components/teacher/CreateAssignmentWorkflow";
 import {
   PageHeader,

@@ -1,3 +1,5 @@
+//src/lib/assignment/assignmentApiSlice.ts
+
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "../api/baseQueryWithReauth";
 import {
@@ -21,13 +23,12 @@ export const assignmentApiSlice = createApi({
       transformResponse: (response: AssignmentApiResponse) => response.data,
       invalidatesTags: (_result, _error, { courseId }) => {
         // ADD THIS LOG
-        console.log("INVALIDATING TAG:", { type: "Course", id: courseId });
         return [{ type: "Course", id: courseId }];
       },
     }),
 
     getAssignmentById: builder.query<Assignment, string>({
-      query: (assignmentId) => `/assignments/${assignmentId}`,
+      query: (assignmentId) => `/assignments/${assignmentId}/teacher`,
       transformResponse: (response: AssignmentApiResponse) => response.data,
       providesTags: (_result, _error, assignmentId) => [
         { type: "Assignment", id: assignmentId },

@@ -1,48 +1,106 @@
-"use client";
+"use-client";
 
 import Link from "next/link";
 import {
   Card,
+  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
-import { Users, FileText } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FileText } from "lucide-react";
 import { Course } from "@/lib/course/courseTypes";
-import { UserRole } from "@/lib/user/userTypes"; // Import UserRole enum
+import { UserRole } from "@/lib/user/userTypes";
+import { cn } from "@/lib/utils";
 
+// --- THIS IS THE FIX ---
+// Add the missing interface definition here
 interface CourseCardProps {
   course: Course;
-  userRole?: UserRole; // Accept the user's role as a prop
+  userRole?: UserRole;
 }
 
+const getSubjectColor = (subjectName: string) => {
+  let hash = 0;
+  for (let i = 0; i < subjectName.length; i++) {
+    hash = subjectName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colors = [
+    "bg-red-500",
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-yellow-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-teal-500",
+  ];
+  return colors[Math.abs(hash) % colors.length];
+};
+
+const AvatarGroup = ({
+  students,
+}: {
+  students: { profileImage?: string | null; displayName?: string | null }[];
+}) => {
+  const displayedStudents = students.slice(0, 3);
+  const remainingCount = students.length - displayedStudents.length;
+
+  return (
+    <div className="flex items-center">
+      <div className="flex -space-x-2 overflow-hidden">
+        {displayedStudents.map((student, index) => (
+          <Avatar
+            key={index}
+            className="inline-block h-6 w-6 rounded-full ring-2 ring-background"
+          >
+            <AvatarImage src={student.profileImage ?? ""} />
+            <AvatarFallback>{student.displayName?.charAt(0)}</AvatarFallback>
+          </Avatar>
+        ))}
+      </div>
+      {remainingCount > 0 && (
+        <div className="z-10 flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground ring-2 ring-background">
+          +{remainingCount}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function CourseCard({ course, userRole }: CourseCardProps) {
-  // --- THIS IS THE FIX ---
-  // The link is now dynamic based on the user's role.
-  // It defaults to the student view if the role is not provided.
   const courseDetailUrl =
     userRole === UserRole.TEACHER
       ? `/courses/${course.id}/teacher-view`
       : `/courses/${course.id}/student-view`;
 
+  const accentColor = getSubjectColor(course.subject.name);
+
   return (
-    <Link href={courseDetailUrl}>
-      <Card className="h-full hover:border-primary transition-colors">
-        <CardHeader>
-          <CardTitle>{course.subject.name}</CardTitle>
-          <CardDescription>{course.academicLevel.name}</CardDescription>
+    <Link href={courseDetailUrl} className="block group">
+      <Card className="h-full flex flex-col transition-all duration-200 group-hover:border-primary group-hover:shadow-lg">
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <CardDescription>{course.academicLevel.name}</CardDescription>
+              <CardTitle className="text-xl">{course.subject.name}</CardTitle>
+            </div>
+            <div className={cn("h-3 w-3 rounded-full", accentColor)} />
+          </div>
         </CardHeader>
-        <CardFooter className="flex justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            <span>{course._count.students} Students</span>
+        <CardContent className="flex-grow flex flex-col justify-end gap-4">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <AvatarGroup students={course.students || []} />
+              <span>{course._count.students} Students</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span>{course._count.assignments} Assignments</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <FileText className="h-4 w-4" />
-            <span>{course._count.assignments} Assignments</span>
-          </div>
-        </CardFooter>
+        </CardContent>
       </Card>
     </Link>
   );

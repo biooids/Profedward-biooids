@@ -176,8 +176,15 @@ model DocumentChunk {
 
 model Course {
   id          String @id @default(uuid())
-  description String? @db.Text
+  description String? @db.Text 
   createdAt   DateTime @default(now())
+
+  
+  teacherMethodology  String? @db.Text 
+  teacherContactInfo  String?          
+  resources           Json?            
+
+  
   academicLevelId String
   academicLevel   AcademicLevel @relation(fields: [academicLevelId], references: [id])
 

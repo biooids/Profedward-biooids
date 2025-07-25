@@ -1,3 +1,4 @@
+//stc/app/courses/page.tsx
 import MyCoursesDashboard from "@/components/teacher/MyCoursesDashboard";
 import {
   PageHeader,

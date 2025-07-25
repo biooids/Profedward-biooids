@@ -1,24 +1,30 @@
 "use client";
 
-// No longer need useState
+import { useState } from "react";
 import { useGetCourseDetailsForTeacherQuery } from "@/lib/course/courseApiSlice";
-import Link from "next/link"; // Import the Link component
-import { Loader2, PlusCircle, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+  Loader2,
+  PlusCircle,
+  FileText,
+  Edit,
+  Info,
+  Users,
+  BookText,
+  MessageSquare,
+  Link as LinkIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   PageHeader,
   PageHeaderDescription,
   PageHeaderHeading,
 } from "@/components/layouts/PageHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// We no longer import or use CreateAssignmentModal
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EditSyllabusModal from "./EditSyllabusModal";
+import SyllabusItem from "./SyllabusItem"; // Import the new component
 
 interface CourseDetailViewProps {
   courseId: string;
@@ -30,8 +36,7 @@ export default function CourseDetailView({ courseId }: CourseDetailViewProps) {
     isLoading,
     isError,
   } = useGetCourseDetailsForTeacherQuery(courseId);
-
-  // The useState for the modal is no longer needed
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -44,31 +49,118 @@ export default function CourseDetailView({ courseId }: CourseDetailViewProps) {
   if (isError || !course) {
     return (
       <p className="text-destructive text-center">
-        Failed to load course details or course not found.
+        Failed to load course details.
       </p>
     );
   }
 
   return (
     <>
+      <EditSyllabusModal
+        course={course}
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+      />
+
       <PageHeader>
         <PageHeaderHeading>
           {course.subject.name}: {course.academicLevel.name}
         </PageHeaderHeading>
         <PageHeaderDescription>
-          {course.description || "No description provided."}
+          Welcome, {course.teachers?.[0]?.displayName || "Teacher"}. Manage your
+          course here.
         </PageHeaderDescription>
       </PageHeader>
 
-      {/* The modal component is removed from here */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">
+            <Info className="mr-2 h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="assignments">
+            <FileText className="mr-2 h-4 w-4" />
+            Assignments
+          </TabsTrigger>
+          <TabsTrigger value="students">
+            <Users className="mr-2 h-4 w-4" />
+            Students
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-8 md:grid-cols-3">
-        {/* Main Content: Assignments */}
-        <div className="md:col-span-2 space-y-4">
+        {/* TAB 1: Overview & Syllabus (IMPROVED UI) */}
+        <TabsContent value="overview" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Course Syllabus & Details</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditModalOpen(true)}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Details
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-4">
+              <div className="grid gap-6 md:grid-cols-2">
+                <SyllabusItem
+                  icon={BookText}
+                  title="Description"
+                  isPlaceholder={!course.description}
+                >
+                  <p>{course.description || "Not specified."}</p>
+                </SyllabusItem>
+
+                <SyllabusItem
+                  icon={Users}
+                  title="Teaching Methodology"
+                  isPlaceholder={!course.teacherMethodology}
+                >
+                  <p>{course.teacherMethodology || "Not specified."}</p>
+                </SyllabusItem>
+
+                <SyllabusItem
+                  icon={MessageSquare}
+                  title="Contact & Office Hours"
+                  isPlaceholder={!course.teacherContactInfo}
+                >
+                  <p>{course.teacherContactInfo || "Not specified."}</p>
+                </SyllabusItem>
+              </div>
+
+              {Array.isArray(course.resources) &&
+                course.resources.length > 0 && (
+                  <div className="space-y-4 pt-6 border-t">
+                    <h4 className="font-semibold text-card-foreground flex items-center">
+                      <LinkIcon className="h-5 w-5 mr-3 text-primary" />
+                      Resources & Links
+                    </h4>
+                    <ul className="list-disc pl-5 space-y-2 text-sm">
+                      {course.resources.map((resource: any, index: number) => (
+                        <li key={index}>
+                          <a
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline-offset-4 hover:underline"
+                          >
+                            {resource.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* TAB 2: Assignments */}
+        <TabsContent value="assignments" className="space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Assignments</CardTitle>
-              {/* This button is now a Link */}
               <Button size="sm" asChild>
                 <Link href={`/courses/${courseId}/assignments/new`}>
                   <PlusCircle className="mr-2 h-4 w-4" />
@@ -78,10 +170,8 @@ export default function CourseDetailView({ courseId }: CourseDetailViewProps) {
             </CardHeader>
             <CardContent>
               {course.assignments.length > 0 ? (
-                // REMOVED the extra outer <div> and .map() loop
                 <div className="space-y-2">
                   {course.assignments.map((assignment) => (
-                    // Add the 'key' prop to the top-level item in the map
                     <Link
                       key={assignment.id}
                       href={`/courses/${courseId}/assignments/${assignment.id}`}
@@ -101,32 +191,34 @@ export default function CourseDetailView({ courseId }: CourseDetailViewProps) {
                 </div>
               ) : (
                 <p className="text-sm text-center py-8 text-muted-foreground">
-                  No assignments have been created for this course yet.
+                  No assignments created yet.
                 </p>
               )}
             </CardContent>
           </Card>
-        </div>
+        </TabsContent>
 
-        {/* Sidebar: Student Roster */}
-        <div className="md:col-span-1">
+        {/* TAB 3: Students */}
+        <TabsContent value="students" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>
                 Enrolled Students ({course.students.length})
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {course.students.map((student) => (
-                <div key={student.id} className="flex items-center gap-3">
-                  <Avatar>
+                <div key={student.id} className="flex items-center gap-4">
+                  <Avatar className="h-10 w-10">
                     <AvatarImage src={student.profileImage ?? ""} />
                     <AvatarFallback>
                       {student.displayName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium text-sm">{student.displayName}</p>
+                    <p className="font-semibold text-sm">
+                      {student.displayName}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {student.email}
                     </p>
@@ -135,8 +227,8 @@ export default function CourseDetailView({ courseId }: CourseDetailViewProps) {
               ))}
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

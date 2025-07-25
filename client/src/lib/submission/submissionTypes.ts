@@ -1,5 +1,6 @@
 import { User } from "../user/userTypes";
 import { Assignment } from "../assignment/assignmentTypes";
+import { Document } from "../document/documentTypes"; // <-- THIS IS THE MISSING LINE
 
 // This enum is used by both Teachers and Students
 export enum SubmissionStatus {
@@ -35,19 +36,8 @@ export interface StudentSubmission {
   status: SubmissionStatus;
   submittedAt: string;
   notes: string | null;
-  assignment: {
-    id: string;
-    title: string;
-    dueDate: string | null;
-    document: Document; // <-- ADD THIS LINE
-
-    course: {
-      id: string;
-      subject: { name: string };
-      academicLevel: { name: string };
-      teachers: { displayName: string | null }[]; // <-- ADD THIS LINE
-    };
-  };
+  document: Document; // The student's own submitted document
+  assignment: Assignment; // The full assignment, which contains the teacher's document
   correction: {
     grade: string | null;
     comments: string | null;

@@ -82,6 +82,9 @@ CREATE TABLE "Course" (
     "id" TEXT NOT NULL,
     "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "teacherMethodology" TEXT,
+    "teacherContactInfo" TEXT,
+    "resources" JSONB,
     "academicLevelId" TEXT NOT NULL,
     "subjectId" TEXT NOT NULL,
 

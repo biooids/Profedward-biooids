@@ -12,23 +12,23 @@ import { User, UserCog, ShieldCheck, LogOut, Loader2 } from "lucide-react";
 const testUsers = [
   {
     name: "Admin",
-    userId: "70da6190-bdc5-4f1c-909b-1b0041b35fad",
+    userId: "ec843a39-ae94-455c-b9a0-7e61da28f337",
     icon: ShieldCheck,
   },
   {
     name: "Teacher",
-    userId: "665a4ead-3b03-4de3-ac0c-8af9321eca81",
+    userId: "73f932ec-53db-49cc-b2a4-ffe25ae6e24c",
     icon: UserCog,
   },
   {
     name: "Student",
-    userId: "166f30d0-7369-48f7-9672-cbdb1e4f87dd",
+    userId: "a9167335-20fc-46b6-9e64-6ab9010cb2be",
     icon: User,
   },
 
   {
     name: "General",
-    userId: "41b1747b-cf77-45a2-aaaf-3bb08be9222b",
+    userId: "89c65bc3-01b9-473c-85bc-9f4e72efb7fc",
     icon: User,
   },
 ];

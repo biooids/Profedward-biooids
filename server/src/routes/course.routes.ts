@@ -16,6 +16,11 @@ router.get(
   verifyToken,
   courseController.getCourseDetailsForTeacher
 );
+router.patch(
+  "/:courseId/details",
+  verifyToken,
+  courseController.updateCourseDetails
+);
 
 // --- Admin-Only Routes (Protected by login + admin role) ---
 router.get("/", verifyToken, verifyAdmin, courseController.getAllCourses); // <-- ADD THIS LINE

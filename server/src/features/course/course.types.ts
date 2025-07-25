@@ -1,15 +1,22 @@
-// DTO for creating a new course.
+//src/features/course/course.types.ts
+import { Prisma } from "prisma/generated/prisma";
 export interface CreateCourseDto {
-  academicLevelId: string; // <-- ADD THIS
-  subjectId: string; // <-- ADD THIS
+  academicLevelId: string;
+  subjectId: string;
   teacherId: string;
   description?: string;
 }
-// DTO for enrolling a student in a course.
+
 export interface EnrollStudentDto {
   studentId: string;
 }
 
 export interface SetStudentEnrollmentDto {
-  courseIds: string[]; // An array of all course IDs the student should be enrolled in
+  courseIds: string[];
+}
+export interface UpdateCourseDetailsDto {
+  description?: string;
+  teacherMethodology?: string;
+  teacherContactInfo?: string;
+  resources?: Prisma.JsonValue;
 }

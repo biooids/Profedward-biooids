@@ -1,3 +1,4 @@
+//src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist } from "next/font/google"; // Using Geist Sans only for simplicity
 import "./globals.css";
@@ -10,6 +11,7 @@ import SessionProviderWrapper from "@/components/layouts/SessionProviderWrapper"
 import { ThemeProvider } from "@/components/layouts/ThemeProvider";
 import { NextAuthSync } from "@/components/layouts/NextAuthSync";
 import DevLoginPanel from "@/components/dev/DevLoginPanel";
+import { Toaster } from "sonner"; // <-- 1. IMPORT SONNER
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,7 +50,8 @@ export default function RootLayout({
                   <Footer />
                 </div>
               </div>
-              <DevLoginPanel /> {/* <-- ADD THE PANEL HERE */}
+              <DevLoginPanel />
+              <Toaster richColors position="top-right" />{" "}
             </ThemeProvider>
           </SessionProviderWrapper>
         </ReduxProvider>

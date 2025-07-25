@@ -1,3 +1,5 @@
+//src/features/assignment/assignment.service.ts
+
 import prisma from "../../db/prisma";
 import { createHttpError } from "../../utils/error.factory";
 import { CreateAssignmentDto } from "./assignment.types";
@@ -105,15 +107,20 @@ export class AssignmentService {
    * [STUDENT] Gets all assignments from all of a student's courses
    * that they have not yet submitted.
    */
+  /**
+   * [STUDENT] Gets all assignments from all of a student's courses
+   * that they have not yet submitted. This is the definitive function.
+   */
   public async getPendingAssignmentsForStudent(studentId: string) {
+    // 1. Find every assignment...
     return prisma.assignment.findMany({
       where: {
-        // Find assignments from courses the student is in
+        // 2. ...that belongs to a course the student is enrolled in...
         course: {
           students: { some: { id: studentId } },
         },
-        // AND where a submission record for this student does NOT exist
-        // with a status of SUBMITTED or GRADED
+        // 3. ...AND for which the student does NOT have a submission that is
+        // already SUBMITTED or GRADED. This leaves only the pending ones.
         NOT: {
           submissions: {
             some: {
@@ -123,24 +130,16 @@ export class AssignmentService {
           },
         },
       },
-      // Include all the data needed for the frontend display
+      // 4. Include all the necessary related data for display.
       include: {
-        // We need the student's specific submission record to get its ID for the link
         submissions: {
-          where: {
-            studentId: studentId,
-            status: "PENDING",
-          },
+          where: { studentId: studentId, status: "PENDING" },
         },
         course: {
           include: {
             subject: true,
             academicLevel: true,
-            teachers: {
-              select: {
-                displayName: true,
-              },
-            },
+            teachers: { select: { displayName: true } },
           },
         },
       },

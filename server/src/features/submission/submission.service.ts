@@ -132,9 +132,10 @@ export class SubmissionService {
     return prisma.submission.findMany({
       where,
       include: {
+        document: true, // <-- ADD THIS LINE to include the student's document
         assignment: {
           include: {
-            document: true,
+            document: true, // This is the teacher's original document
             course: {
               include: {
                 subject: true,
@@ -150,10 +151,9 @@ export class SubmissionService {
         },
         correction: true,
       },
-      // This is the completed orderBy clause
       orderBy: {
         assignment: {
-          dueDate: "asc", // Show assignments due soonest first
+          dueDate: "asc",
         },
       },
     });

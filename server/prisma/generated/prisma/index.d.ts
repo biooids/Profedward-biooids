@@ -8254,6 +8254,8 @@ export namespace Prisma {
     id: string | null
     description: string | null
     createdAt: Date | null
+    teacherMethodology: string | null
+    teacherContactInfo: string | null
     academicLevelId: string | null
     subjectId: string | null
   }
@@ -8262,6 +8264,8 @@ export namespace Prisma {
     id: string | null
     description: string | null
     createdAt: Date | null
+    teacherMethodology: string | null
+    teacherContactInfo: string | null
     academicLevelId: string | null
     subjectId: string | null
   }
@@ -8270,6 +8274,9 @@ export namespace Prisma {
     id: number
     description: number
     createdAt: number
+    teacherMethodology: number
+    teacherContactInfo: number
+    resources: number
     academicLevelId: number
     subjectId: number
     _all: number
@@ -8280,6 +8287,8 @@ export namespace Prisma {
     id?: true
     description?: true
     createdAt?: true
+    teacherMethodology?: true
+    teacherContactInfo?: true
     academicLevelId?: true
     subjectId?: true
   }
@@ -8288,6 +8297,8 @@ export namespace Prisma {
     id?: true
     description?: true
     createdAt?: true
+    teacherMethodology?: true
+    teacherContactInfo?: true
     academicLevelId?: true
     subjectId?: true
   }
@@ -8296,6 +8307,9 @@ export namespace Prisma {
     id?: true
     description?: true
     createdAt?: true
+    teacherMethodology?: true
+    teacherContactInfo?: true
+    resources?: true
     academicLevelId?: true
     subjectId?: true
     _all?: true
@@ -8377,6 +8391,9 @@ export namespace Prisma {
     id: string
     description: string | null
     createdAt: Date
+    teacherMethodology: string | null
+    teacherContactInfo: string | null
+    resources: JsonValue | null
     academicLevelId: string
     subjectId: string
     _count: CourseCountAggregateOutputType | null
@@ -8402,6 +8419,9 @@ export namespace Prisma {
     id?: boolean
     description?: boolean
     createdAt?: boolean
+    teacherMethodology?: boolean
+    teacherContactInfo?: boolean
+    resources?: boolean
     academicLevelId?: boolean
     subjectId?: boolean
     academicLevel?: boolean | AcademicLevelDefaultArgs<ExtArgs>
@@ -8416,6 +8436,9 @@ export namespace Prisma {
     id?: boolean
     description?: boolean
     createdAt?: boolean
+    teacherMethodology?: boolean
+    teacherContactInfo?: boolean
+    resources?: boolean
     academicLevelId?: boolean
     subjectId?: boolean
     academicLevel?: boolean | AcademicLevelDefaultArgs<ExtArgs>
@@ -8426,6 +8449,9 @@ export namespace Prisma {
     id?: boolean
     description?: boolean
     createdAt?: boolean
+    teacherMethodology?: boolean
+    teacherContactInfo?: boolean
+    resources?: boolean
     academicLevelId?: boolean
     subjectId?: boolean
     academicLevel?: boolean | AcademicLevelDefaultArgs<ExtArgs>
@@ -8436,11 +8462,14 @@ export namespace Prisma {
     id?: boolean
     description?: boolean
     createdAt?: boolean
+    teacherMethodology?: boolean
+    teacherContactInfo?: boolean
+    resources?: boolean
     academicLevelId?: boolean
     subjectId?: boolean
   }
 
-  export type CourseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "description" | "createdAt" | "academicLevelId" | "subjectId", ExtArgs["result"]["course"]>
+  export type CourseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "description" | "createdAt" | "teacherMethodology" | "teacherContactInfo" | "resources" | "academicLevelId" | "subjectId", ExtArgs["result"]["course"]>
   export type CourseInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     academicLevel?: boolean | AcademicLevelDefaultArgs<ExtArgs>
     subject?: boolean | SubjectDefaultArgs<ExtArgs>
@@ -8471,6 +8500,9 @@ export namespace Prisma {
       id: string
       description: string | null
       createdAt: Date
+      teacherMethodology: string | null
+      teacherContactInfo: string | null
+      resources: Prisma.JsonValue | null
       academicLevelId: string
       subjectId: string
     }, ExtArgs["result"]["course"]>
@@ -8904,6 +8936,9 @@ export namespace Prisma {
     readonly id: FieldRef<"Course", 'String'>
     readonly description: FieldRef<"Course", 'String'>
     readonly createdAt: FieldRef<"Course", 'DateTime'>
+    readonly teacherMethodology: FieldRef<"Course", 'String'>
+    readonly teacherContactInfo: FieldRef<"Course", 'String'>
+    readonly resources: FieldRef<"Course", 'Json'>
     readonly academicLevelId: FieldRef<"Course", 'String'>
     readonly subjectId: FieldRef<"Course", 'String'>
   }
@@ -17084,6 +17119,9 @@ export namespace Prisma {
     id: 'id',
     description: 'description',
     createdAt: 'createdAt',
+    teacherMethodology: 'teacherMethodology',
+    teacherContactInfo: 'teacherContactInfo',
+    resources: 'resources',
     academicLevelId: 'academicLevelId',
     subjectId: 'subjectId'
   };
@@ -17723,6 +17761,9 @@ export namespace Prisma {
     id?: StringFilter<"Course"> | string
     description?: StringNullableFilter<"Course"> | string | null
     createdAt?: DateTimeFilter<"Course"> | Date | string
+    teacherMethodology?: StringNullableFilter<"Course"> | string | null
+    teacherContactInfo?: StringNullableFilter<"Course"> | string | null
+    resources?: JsonNullableFilter<"Course">
     academicLevelId?: StringFilter<"Course"> | string
     subjectId?: StringFilter<"Course"> | string
     academicLevel?: XOR<AcademicLevelScalarRelationFilter, AcademicLevelWhereInput>
@@ -17736,6 +17777,9 @@ export namespace Prisma {
     id?: SortOrder
     description?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    teacherMethodology?: SortOrderInput | SortOrder
+    teacherContactInfo?: SortOrderInput | SortOrder
+    resources?: SortOrderInput | SortOrder
     academicLevelId?: SortOrder
     subjectId?: SortOrder
     academicLevel?: AcademicLevelOrderByWithRelationInput
@@ -17752,6 +17796,9 @@ export namespace Prisma {
     NOT?: CourseWhereInput | CourseWhereInput[]
     description?: StringNullableFilter<"Course"> | string | null
     createdAt?: DateTimeFilter<"Course"> | Date | string
+    teacherMethodology?: StringNullableFilter<"Course"> | string | null
+    teacherContactInfo?: StringNullableFilter<"Course"> | string | null
+    resources?: JsonNullableFilter<"Course">
     academicLevelId?: StringFilter<"Course"> | string
     subjectId?: StringFilter<"Course"> | string
     academicLevel?: XOR<AcademicLevelScalarRelationFilter, AcademicLevelWhereInput>
@@ -17765,6 +17812,9 @@ export namespace Prisma {
     id?: SortOrder
     description?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    teacherMethodology?: SortOrderInput | SortOrder
+    teacherContactInfo?: SortOrderInput | SortOrder
+    resources?: SortOrderInput | SortOrder
     academicLevelId?: SortOrder
     subjectId?: SortOrder
     _count?: CourseCountOrderByAggregateInput
@@ -17779,6 +17829,9 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Course"> | string
     description?: StringNullableWithAggregatesFilter<"Course"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Course"> | Date | string
+    teacherMethodology?: StringNullableWithAggregatesFilter<"Course"> | string | null
+    teacherContactInfo?: StringNullableWithAggregatesFilter<"Course"> | string | null
+    resources?: JsonNullableWithAggregatesFilter<"Course">
     academicLevelId?: StringWithAggregatesFilter<"Course"> | string
     subjectId?: StringWithAggregatesFilter<"Course"> | string
   }
@@ -18630,6 +18683,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel: AcademicLevelCreateNestedOneWithoutCoursesInput
     subject: SubjectCreateNestedOneWithoutCoursesInput
     students?: UserCreateNestedManyWithoutEnrolledCoursesInput
@@ -18641,6 +18697,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId: string
     subjectId: string
     students?: UserUncheckedCreateNestedManyWithoutEnrolledCoursesInput
@@ -18652,6 +18711,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel?: AcademicLevelUpdateOneRequiredWithoutCoursesNestedInput
     subject?: SubjectUpdateOneRequiredWithoutCoursesNestedInput
     students?: UserUpdateManyWithoutEnrolledCoursesNestedInput
@@ -18663,6 +18725,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
     subjectId?: StringFieldUpdateOperationsInput | string
     students?: UserUncheckedUpdateManyWithoutEnrolledCoursesNestedInput
@@ -18674,6 +18739,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId: string
     subjectId: string
   }
@@ -18682,12 +18750,18 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
   }
 
   export type CourseUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
     subjectId?: StringFieldUpdateOperationsInput | string
   }
@@ -19637,6 +19711,9 @@ export namespace Prisma {
     id?: SortOrder
     description?: SortOrder
     createdAt?: SortOrder
+    teacherMethodology?: SortOrder
+    teacherContactInfo?: SortOrder
+    resources?: SortOrder
     academicLevelId?: SortOrder
     subjectId?: SortOrder
   }
@@ -19645,6 +19722,8 @@ export namespace Prisma {
     id?: SortOrder
     description?: SortOrder
     createdAt?: SortOrder
+    teacherMethodology?: SortOrder
+    teacherContactInfo?: SortOrder
     academicLevelId?: SortOrder
     subjectId?: SortOrder
   }
@@ -19653,6 +19732,8 @@ export namespace Prisma {
     id?: SortOrder
     description?: SortOrder
     createdAt?: SortOrder
+    teacherMethodology?: SortOrder
+    teacherContactInfo?: SortOrder
     academicLevelId?: SortOrder
     subjectId?: SortOrder
   }
@@ -21589,6 +21670,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel: AcademicLevelCreateNestedOneWithoutCoursesInput
     subject: SubjectCreateNestedOneWithoutCoursesInput
     teachers?: UserCreateNestedManyWithoutTaughtCoursesInput
@@ -21599,6 +21683,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId: string
     subjectId: string
     teachers?: UserUncheckedCreateNestedManyWithoutTaughtCoursesInput
@@ -21614,6 +21701,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel: AcademicLevelCreateNestedOneWithoutCoursesInput
     subject: SubjectCreateNestedOneWithoutCoursesInput
     students?: UserCreateNestedManyWithoutEnrolledCoursesInput
@@ -21624,6 +21714,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId: string
     subjectId: string
     students?: UserUncheckedCreateNestedManyWithoutEnrolledCoursesInput
@@ -21863,6 +21956,9 @@ export namespace Prisma {
     id?: StringFilter<"Course"> | string
     description?: StringNullableFilter<"Course"> | string | null
     createdAt?: DateTimeFilter<"Course"> | Date | string
+    teacherMethodology?: StringNullableFilter<"Course"> | string | null
+    teacherContactInfo?: StringNullableFilter<"Course"> | string | null
+    resources?: JsonNullableFilter<"Course">
     academicLevelId?: StringFilter<"Course"> | string
     subjectId?: StringFilter<"Course"> | string
   }
@@ -22969,6 +23065,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel: AcademicLevelCreateNestedOneWithoutCoursesInput
     subject: SubjectCreateNestedOneWithoutCoursesInput
     students?: UserCreateNestedManyWithoutEnrolledCoursesInput
@@ -22979,6 +23078,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId: string
     subjectId: string
     students?: UserUncheckedCreateNestedManyWithoutEnrolledCoursesInput
@@ -23129,6 +23231,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel?: AcademicLevelUpdateOneRequiredWithoutCoursesNestedInput
     subject?: SubjectUpdateOneRequiredWithoutCoursesNestedInput
     students?: UserUpdateManyWithoutEnrolledCoursesNestedInput
@@ -23139,6 +23244,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
     subjectId?: StringFieldUpdateOperationsInput | string
     students?: UserUncheckedUpdateManyWithoutEnrolledCoursesNestedInput
@@ -24146,6 +24254,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     subject: SubjectCreateNestedOneWithoutCoursesInput
     students?: UserCreateNestedManyWithoutEnrolledCoursesInput
     teachers?: UserCreateNestedManyWithoutTaughtCoursesInput
@@ -24156,6 +24267,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     subjectId: string
     students?: UserUncheckedCreateNestedManyWithoutEnrolledCoursesInput
     teachers?: UserUncheckedCreateNestedManyWithoutTaughtCoursesInput
@@ -24192,6 +24306,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel: AcademicLevelCreateNestedOneWithoutCoursesInput
     students?: UserCreateNestedManyWithoutEnrolledCoursesInput
     teachers?: UserCreateNestedManyWithoutTaughtCoursesInput
@@ -24202,6 +24319,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId: string
     students?: UserUncheckedCreateNestedManyWithoutEnrolledCoursesInput
     teachers?: UserUncheckedCreateNestedManyWithoutTaughtCoursesInput
@@ -24387,6 +24507,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel?: AcademicLevelUpdateOneRequiredWithoutCoursesNestedInput
     subject?: SubjectUpdateOneRequiredWithoutCoursesNestedInput
     teachers?: UserUpdateManyWithoutTaughtCoursesNestedInput
@@ -24397,6 +24520,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
     subjectId?: StringFieldUpdateOperationsInput | string
     teachers?: UserUncheckedUpdateManyWithoutTaughtCoursesNestedInput
@@ -24407,6 +24533,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
     subjectId?: StringFieldUpdateOperationsInput | string
   }
@@ -24415,6 +24544,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel?: AcademicLevelUpdateOneRequiredWithoutCoursesNestedInput
     subject?: SubjectUpdateOneRequiredWithoutCoursesNestedInput
     students?: UserUpdateManyWithoutEnrolledCoursesNestedInput
@@ -24425,6 +24557,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
     subjectId?: StringFieldUpdateOperationsInput | string
     students?: UserUncheckedUpdateManyWithoutEnrolledCoursesNestedInput
@@ -24435,6 +24570,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
     subjectId?: StringFieldUpdateOperationsInput | string
   }
@@ -24918,6 +25056,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     subjectId: string
   }
 
@@ -24925,6 +25066,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     subject?: SubjectUpdateOneRequiredWithoutCoursesNestedInput
     students?: UserUpdateManyWithoutEnrolledCoursesNestedInput
     teachers?: UserUpdateManyWithoutTaughtCoursesNestedInput
@@ -24935,6 +25079,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     subjectId?: StringFieldUpdateOperationsInput | string
     students?: UserUncheckedUpdateManyWithoutEnrolledCoursesNestedInput
     teachers?: UserUncheckedUpdateManyWithoutTaughtCoursesNestedInput
@@ -24945,6 +25092,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     subjectId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -24952,6 +25102,9 @@ export namespace Prisma {
     id?: string
     description?: string | null
     createdAt?: Date | string
+    teacherMethodology?: string | null
+    teacherContactInfo?: string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId: string
   }
 
@@ -24959,6 +25112,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevel?: AcademicLevelUpdateOneRequiredWithoutCoursesNestedInput
     students?: UserUpdateManyWithoutEnrolledCoursesNestedInput
     teachers?: UserUpdateManyWithoutTaughtCoursesNestedInput
@@ -24969,6 +25125,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
     students?: UserUncheckedUpdateManyWithoutEnrolledCoursesNestedInput
     teachers?: UserUncheckedUpdateManyWithoutTaughtCoursesNestedInput
@@ -24979,6 +25138,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    teacherMethodology?: NullableStringFieldUpdateOperationsInput | string | null
+    teacherContactInfo?: NullableStringFieldUpdateOperationsInput | string | null
+    resources?: NullableJsonNullValueInput | InputJsonValue
     academicLevelId?: StringFieldUpdateOperationsInput | string
   }
 

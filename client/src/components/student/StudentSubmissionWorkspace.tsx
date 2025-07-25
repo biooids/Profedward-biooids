@@ -40,7 +40,6 @@ export default function StudentSubmissionWorkspace({
 }) {
   const router = useRouter();
 
-  // --- FIX #1: Correctly pass through isLoading and isError ---
   const {
     data: submission,
     isLoading: isLoadingSubmission,
@@ -68,51 +67,82 @@ export default function StudentSubmissionWorkspace({
   const [editorContent, setEditorContent] = useState<any | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
-  const isLoading = isCreatingDoc || isUpdatingDoc;
+  const isSaving = isCreatingDoc || isUpdatingDoc;
 
   useEffect(() => {
-    if (!studentWorkDoc?.editableContent || !editorContent) return;
-    const originalContent = JSON.stringify(studentWorkDoc.editableContent);
+    if (submission) {
+      const isWorkStarted =
+        submission.document.id !== submission.assignment.document.id;
+      if (isWorkStarted) {
+        setStudentWorkDoc(submission.document);
+        setEditorContent(submission.document.editableContent);
+      }
+    }
+  }, [submission]);
+
+  useEffect(() => {
+    if (editorContent === null && studentWorkDoc === null) return;
+    const originalContent = studentWorkDoc
+      ? JSON.stringify(studentWorkDoc.editableContent)
+      : "";
     const currentContent = JSON.stringify(editorContent);
     setIsDirty(originalContent !== currentContent);
   }, [editorContent, studentWorkDoc]);
 
-  const handleSaveDraft = async () => {
-    if (!submission) return;
+  const handleSaveDraft = async (): Promise<DocumentType | null> => {
+    if (!submission || !editorContent) return null;
     try {
+      let savedDoc: DocumentType;
       if (studentWorkDoc) {
-        // --- FIX #2: Extract the nested document from the response ---
         const response = await updateDocument({
           documentId: studentWorkDoc.id,
-          data: { content: editorContent },
+          data: { name: studentWorkDoc.name, content: editorContent },
         }).unwrap();
-        setStudentWorkDoc(response.data.document);
+        // --- FIX: Extract the nested document from the response ---
+        savedDoc = response.data.document;
       } else {
-        // --- FIX #2: Extract the nested document from the response ---
         const response = await createDocument({
           name: `Submission for: ${submission.assignment.title}`,
           content: editorContent,
         }).unwrap();
-        setStudentWorkDoc(response.data.document);
+        // --- FIX: Extract the nested document from the response ---
+        savedDoc = response.data.document;
       }
+      setStudentWorkDoc(savedDoc);
       setIsDirty(false);
+      return savedDoc;
     } catch (err) {
       console.error("Failed to save draft:", err);
+      return null;
     }
   };
-
   const handleSubmitWork = async () => {
-    if (!studentWorkDoc || !submission) return;
+    if (!submission) return;
+
+    let docToSubmit = studentWorkDoc;
+
     if (isDirty) {
+      const savedDoc = await handleSaveDraft();
+      if (!savedDoc) {
+        alert(
+          "Could not save your latest changes. Please try again before submitting."
+        );
+        return;
+      }
+      docToSubmit = savedDoc;
+    }
+
+    if (!docToSubmit) {
       alert(
-        "You have unsaved changes. Please save your draft before submitting."
+        "There is no work to submit. Please write something and save a draft first."
       );
       return;
     }
+
     try {
       await submitWork({
         submissionId: submission.id,
-        data: { documentId: studentWorkDoc.id },
+        data: { documentId: docToSubmit.id },
       }).unwrap();
       router.push("/assignments");
     } catch (err) {
@@ -149,19 +179,16 @@ export default function StudentSubmissionWorkspace({
           <Button
             variant="outline"
             onClick={handleSaveDraft}
-            disabled={!isDirty || isLoading}
+            disabled={!isDirty || isSaving}
           >
-            {isLoading ? (
+            {isSaving ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
             Save Draft
           </Button>
-          <Button
-            onClick={handleSubmitWork}
-            disabled={!studentWorkDoc || isDirty || isSubmitting}
-          >
+          <Button onClick={handleSubmitWork} disabled={isSubmitting}>
             {isSubmitting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -197,7 +224,8 @@ export default function StudentSubmissionWorkspace({
             </h3>
             <div className="flex-1 overflow-y-auto">
               <TiptapEditor
-                onUpdate={(c) => setEditorContent(JSON.parse(c))}
+                initialContent={editorContent}
+                onUpdate={(c) => setEditorContent(c ? JSON.parse(c) : null)}
                 editable={true}
               />
             </div>

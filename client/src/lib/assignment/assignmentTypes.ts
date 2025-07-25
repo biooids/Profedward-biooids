@@ -1,3 +1,5 @@
+//src/lib/assignment/assignmentTypes.ts
+
 import { Document } from "../document/documentTypes"; // Import the Document type
 
 // Shape of an Assignment object from the backend

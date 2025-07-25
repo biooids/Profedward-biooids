@@ -1,3 +1,5 @@
+//src/components/teacher/MyCoursesDashboard.tsx
+
 "use client";
 
 import {

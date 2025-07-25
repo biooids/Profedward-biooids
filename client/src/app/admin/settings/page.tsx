@@ -1,3 +1,5 @@
+//src/app/admin/settings/page.tsx
+
 import AcademicSettingsDashboard from "@/components/admin/AcademicSettingsDashboard";
 import {
   PageHeader,

@@ -1,3 +1,5 @@
+//src/lib/course/courseTypes.ts
+
 import { User } from "../user/userTypes";
 import { Assignment } from "../assignment/assignmentTypes";
 
@@ -12,13 +14,15 @@ export interface Subject {
   name: string;
 }
 
-// Updated Course interface to use the new types
 export interface Course {
   id: string;
   description: string | null;
   createdAt: string;
-  academicLevel: AcademicLevel; // No longer a simple title
-  subject: Subject; // No longer a simple courseCode
+  teacherMethodology: string | null;
+  teacherContactInfo: string | null;
+  resources: any | null;
+  academicLevel: AcademicLevel;
+  subject: Subject;
   teachers: User[];
   students: User[];
   assignments: Assignment[];
@@ -57,4 +61,10 @@ export interface CreateCourseDto {
 
 export interface SetStudentEnrollmentDto {
   courseIds: string[];
+}
+export interface UpdateCourseDetailsDto {
+  description?: string;
+  teacherMethodology?: string;
+  teacherContactInfo?: string;
+  resources?: any;
 }

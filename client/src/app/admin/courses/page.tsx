@@ -1,3 +1,4 @@
+//src/app/admin/courses/page.tsx
 import CourseManagementDashboard from "@/components/admin/CourseManagementDashboard";
 
 export default function AdminCoursesPage() {

@@ -175,6 +175,9 @@ exports.Prisma.CourseScalarFieldEnum = {
   id: 'id',
   description: 'description',
   createdAt: 'createdAt',
+  teacherMethodology: 'teacherMethodology',
+  teacherContactInfo: 'teacherContactInfo',
+  resources: 'resources',
   academicLevelId: 'academicLevelId',
   subjectId: 'subjectId'
 };

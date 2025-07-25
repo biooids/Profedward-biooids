@@ -1,3 +1,4 @@
+//src/lib/admin/adminTypes.ts
 import { User, UserRole } from "../user/userTypes";
 
 // DTO for the request to update a user's role
