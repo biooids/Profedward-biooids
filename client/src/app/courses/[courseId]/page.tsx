@@ -1,5 +1,5 @@
 //stc/app/courses/[courseId]/page.tsx
-import CourseDetailView from "@/components/teacher/CourseDetailView";
+import CourseDetailView from "@/components/teacher/TeacherCourseDetailView";
 
 interface CourseDetailPageProps {
   params: {

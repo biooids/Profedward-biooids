@@ -1,3 +1,4 @@
+//src/components/teacher/TeacherCourseDetailView.tsx
 "use client";
 
 import { useState } from "react";
@@ -33,7 +34,9 @@ interface CourseDetailViewProps {
   courseId: string;
 }
 
-export default function CourseDetailView({ courseId }: CourseDetailViewProps) {
+export default function TeacherCourseDetailView({
+  courseId,
+}: CourseDetailViewProps) {
   const {
     data: course,
     isLoading,

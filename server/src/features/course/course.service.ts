@@ -173,15 +173,12 @@ export class CourseService {
 
   /**
    * Gets details for a single course, verifying student enrollment.
-   * @param courseId The ID of the course.
-   * @param studentId The ID of the student requesting access.
    */
   public async getCourseDetailsForStudent(courseId: string, studentId: string) {
     const course = await prisma.course.findFirst({
       where: {
         id: courseId,
         students: {
-          // Verify the student is in this course
           some: { id: studentId },
         },
       },
@@ -193,6 +190,23 @@ export class CourseService {
         },
         assignments: {
           orderBy: { createdAt: "desc" },
+          include: {
+            document: {
+              select: {
+                originalFileUrl: true,
+                editableContent: true,
+              },
+            },
+          },
+        },
+
+        students: {
+          select: {
+            id: true,
+            displayName: true,
+            email: true,
+            profileImage: true,
+          },
         },
       },
     });

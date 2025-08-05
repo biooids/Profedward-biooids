@@ -1,3 +1,4 @@
+//src/app/courses/[courseId]/student-view/page.tsx
 import StudentCourseDetailView from "@/components/student/StudentCourseDetailView";
 
 interface PageProps {

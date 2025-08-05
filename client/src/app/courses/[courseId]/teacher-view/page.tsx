@@ -1,5 +1,5 @@
 //src/app/courses/[courseId]/teacher-view/page.tsx
-import CourseDetailView from "@/components/teacher/CourseDetailView";
+import TeacherCourseDetailView from "@/components/teacher/TeacherCourseDetailView";
 
 interface TeacherCourseDetailPageProps {
   params: { courseId: string };
@@ -9,5 +9,5 @@ interface TeacherCourseDetailPageProps {
 export default async function TeacherCourseDetailPage({
   params,
 }: TeacherCourseDetailPageProps) {
-  return <CourseDetailView courseId={params.courseId} />;
+  return <TeacherCourseDetailView courseId={params.courseId} />;
 }
