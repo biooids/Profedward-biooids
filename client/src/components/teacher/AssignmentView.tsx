@@ -1,12 +1,10 @@
-//src/components/teacher/AssignmentView.tsx
-
 "use client";
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useGetAssignmentByIdQuery } from "@/lib/assignment/assignmentApiSlice";
 import { useUpdateDocumentMutation } from "@/lib/document/documentApiSlice";
-import { Loader2, Save, Edit, FileScan } from "lucide-react";
+import { Loader2, Save, Edit, FileScan, Clock, Info } from "lucide-react"; // 1. Import Info icon
 import {
   PageHeader,
   PageHeaderDescription,
@@ -15,8 +13,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TiptapEditor from "@/components/editor/TiptapEditor";
+import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
-// Dynamically import the DocumentViewer with SSR turned off
 const DocumentViewer = dynamic(
   () => import("@/components/documents/view/DocumentViewer"),
   { ssr: false, loading: () => <p>Loading Viewer...</p> }
@@ -34,18 +38,15 @@ export default function AssignmentView({
   } = useGetAssignmentByIdQuery(assignmentId);
   const [updateDocument, { isLoading: isSaving }] = useUpdateDocumentMutation();
 
-  // State to manage unsaved changes
   const [editorContent, setEditorContent] = useState<any>(null);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Effect to populate the editor when data loads
   useEffect(() => {
     if (assignment?.document.editableContent) {
       setEditorContent(assignment.document.editableContent);
     }
   }, [assignment]);
 
-  // Effect to detect if there are unsaved changes
   useEffect(() => {
     if (!assignment || !editorContent) return;
     const originalContent = JSON.stringify(assignment.document.editableContent);
@@ -53,15 +54,12 @@ export default function AssignmentView({
     setIsDirty(originalContent !== currentContent);
   }, [editorContent, assignment]);
 
-  // Handler to save the document
   const handleSaveChanges = async () => {
     if (!assignment || !isDirty || isSaving) return;
     try {
       await updateDocument({
         documentId: assignment.document.id,
         data: {
-          // --- THIS IS THE FIX ---
-          // Send the original document name along with the content.
           name: assignment.document.name,
           content: editorContent,
         },
@@ -87,25 +85,56 @@ export default function AssignmentView({
   return (
     <div className="flex flex-col h-full">
       <PageHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <PageHeaderHeading>{assignment.title}</PageHeaderHeading>
-            <PageHeaderDescription>
-              Due:{" "}
-              {assignment.dueDate
-                ? new Date(assignment.dueDate).toLocaleString()
-                : "No due date"}
-            </PageHeaderDescription>
+        <div className="flex flex-col gap-4">
+          {" "}
+          {/* Increased gap for better spacing */}
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <PageHeaderHeading>{assignment.title}</PageHeaderHeading>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                <Clock className="h-4 w-4" />
+                <span>
+                  Due:{" "}
+                  {assignment.dueDate
+                    ? new Date(assignment.dueDate).toLocaleString()
+                    : "No due date"}
+                </span>
+              </div>
+            </div>
+            {hasEditableContent && (
+              <Button
+                onClick={handleSaveChanges}
+                disabled={!isDirty || isSaving}
+              >
+                {isSaving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                Save Changes
+              </Button>
+            )}
           </div>
-          {hasEditableContent && (
-            <Button onClick={handleSaveChanges} disabled={!isDirty || isSaving}>
-              {isSaving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              Save Changes
-            </Button>
+          {/* --- MODIFIED INSTRUCTIONS SECTION --- */}
+          {assignment.instructions && (
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1" className="border rounded-lg">
+                <AccordionTrigger
+                  // 2. Add classes to style the trigger like an outline button
+                  className="px-4 py-3 hover:no-underline hover:bg-accent rounded-t-lg data-[state=open]:bg-accent data-[state=open]:rounded-b-none"
+                >
+                  <div className="flex items-center">
+                    <Info className="mr-2 h-4 w-4" />
+                    <span>View Instructions</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="p-4 pt-2">
+                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                    {assignment.instructions}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           )}
         </div>
       </PageHeader>
@@ -114,7 +143,7 @@ export default function AssignmentView({
         <TabsList>
           {hasEditableContent && (
             <TabsTrigger value="editor">
-              <Edit className="mr-2 h-4 w-4" /> Editor
+              <Edit className="mr-2 h-4 w-4" /> Worksheet Editor
             </TabsTrigger>
           )}
           {hasOriginalScan && (

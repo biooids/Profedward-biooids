@@ -114,15 +114,21 @@ export class CourseService {
         academicLevel: true,
         subject: true,
         students: {
-          select: {
-            id: true,
-            displayName: true,
-            email: true,
-            profileImage: true,
-          },
+          /* ... */
         },
         assignments: {
           orderBy: { createdAt: "desc" },
+          include: {
+            _count: {
+              select: { submissions: true },
+            },
+            document: {
+              select: {
+                originalFileUrl: true,
+                editableContent: true,
+              },
+            },
+          },
         },
         teachers: true,
       },

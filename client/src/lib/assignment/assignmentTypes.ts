@@ -18,6 +18,10 @@ export interface Assignment {
     academicLevel: { name: string };
     teachers: { displayName: string | null }[];
   };
+  _count?: {
+    submissions: number;
+  };
+
   submissions: { id: string }[];
 }
 

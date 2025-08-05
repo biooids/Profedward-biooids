@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { formatDistanceToNow, isPast } from "date-fns";
 import { useGetCourseDetailsForTeacherQuery } from "@/lib/course/courseApiSlice";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import {
   Loader2,
@@ -25,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditSyllabusModal from "./EditSyllabusModal";
 import SyllabusItem from "./SyllabusItem"; // Import the new component
+import { FileUp, FilePenLine } from "lucide-react";
 
 interface CourseDetailViewProps {
   courseId: string;
@@ -171,23 +174,56 @@ export default function CourseDetailView({ courseId }: CourseDetailViewProps) {
             <CardContent>
               {course.assignments.length > 0 ? (
                 <div className="space-y-2">
-                  {course.assignments.map((assignment) => (
-                    <Link
-                      key={assignment.id}
-                      href={`/courses/${courseId}/assignments/${assignment.id}`}
-                    >
-                      <div className="flex items-center p-2 rounded-md hover:bg-muted">
-                        <FileText className="h-5 w-5 mr-3 text-muted-foreground" />
-                        <span className="font-medium">{assignment.title}</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          Due:{" "}
-                          {assignment.dueDate
-                            ? new Date(assignment.dueDate).toLocaleDateString()
-                            : "N/A"}
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
+                  {course.assignments.map((assignment) => {
+                    const dueDate = assignment.dueDate
+                      ? new Date(assignment.dueDate)
+                      : null;
+                    const isOverdue = dueDate ? isPast(dueDate) : false;
+                    const submissionCount = assignment._count?.submissions || 0;
+                    const totalStudents = course.students.length;
+
+                    const isFileUpload = !!assignment.document?.originalFileUrl;
+                    const DocumentIcon = isFileUpload ? FileUp : FilePenLine;
+
+                    return (
+                      <Link
+                        key={assignment.id}
+                        href={`/courses/${courseId}/assignments/${assignment.id}`}
+                        className="block"
+                      >
+                        <div className="flex items-center p-3 rounded-lg border hover:bg-muted transition-colors">
+                          {/* Use the dynamic icon */}
+                          <DocumentIcon className="h-5 w-5 mr-4 text-primary" />
+
+                          <div className="flex-1">
+                            <p className="font-semibold">{assignment.title}</p>
+                            <p
+                              className={cn(
+                                "text-xs",
+                                isOverdue
+                                  ? "text-destructive"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {dueDate
+                                ? `Due ${formatDistanceToNow(dueDate, {
+                                    addSuffix: true,
+                                  })}`
+                                : "No due date"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-sm">
+                              {submissionCount} / {totalStudents}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Submitted
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-center py-8 text-muted-foreground">

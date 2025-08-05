@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +23,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Upload,
   FilePlus,
@@ -57,11 +68,12 @@ const assignmentSchema = z
     {
       message:
         "You must either upload a file or create a document from scratch.",
-      path: ["documentSource"], // This error will be associated with the tabs
+      path: ["documentSource"],
     }
   );
 
 type AssignmentFormValues = z.infer<typeof assignmentSchema>;
+type DocumentSource = "upload" | "create";
 
 export default function CreateAssignmentWorkflow({
   courseId,
@@ -75,6 +87,8 @@ export default function CreateAssignmentWorkflow({
     useCreateEditableDocumentMutation();
   const [createAssignment, { isLoading: isCreatingAssignment }] =
     useCreateAssignmentMutation();
+
+  const [pendingTab, setPendingTab] = useState<DocumentSource | null>(null);
 
   const isLoading = isUploading || isCreatingDoc || isCreatingAssignment;
 
@@ -95,43 +109,56 @@ export default function CreateAssignmentWorkflow({
 
   const documentSource = watch("documentSource");
 
-  // --- INTELLIGENT STATE HANDLING ---
-  // This logic prevents the user from providing two document sources.
-  const handleFileChange = (file: File | undefined) => {
-    if (file) {
-      setValue("file", file, { shouldValidate: true });
-      // If a file is uploaded, clear the editor content to avoid conflict.
-      setValue("editorContent", null, { shouldValidate: true });
+  // --- UPDATED LOGIC ---
+  // This function will now ALWAYS trigger the confirmation dialog
+  // if the user clicks a different tab than the one they are on.
+  const handleTabChange = (nextTab: DocumentSource) => {
+    if (documentSource !== nextTab) {
+      setPendingTab(nextTab);
     }
+  };
+
+  const handleConfirmSwitch = () => {
+    if (!pendingTab) return;
+
+    // Clear the state of the tab we are leaving.
+    // This is safe even if there's no data to clear.
+    if (pendingTab === "create") {
+      setValue("file", undefined, { shouldValidate: true });
+    } else if (pendingTab === "upload") {
+      setValue("editorContent", null, { shouldValidate: true });
+      // You may need to add a way to imperatively clear your TiptapEditor instance if it holds its own internal state
+    }
+
+    // Complete the switch
+    setValue("documentSource", pendingTab, { shouldValidate: true });
+    setPendingTab(null); // Close the dialog
   };
 
   const handleEditorUpdate = (content: string) => {
-    const parsedContent = JSON.parse(content);
-    // Check if the editor is not empty before setting the value
-    const isEditorEmpty =
-      !parsedContent.content ||
-      (parsedContent.content.length === 1 && !parsedContent.content[0].content);
-
-    if (!isEditorEmpty) {
-      setValue("editorContent", parsedContent, { shouldValidate: true });
-      // If content is added to the editor, clear the uploaded file.
-      setValue("file", undefined, { shouldValidate: true });
-    } else {
+    try {
+      const parsedContent = JSON.parse(content);
+      const isEditorEmpty =
+        !parsedContent.content ||
+        (parsedContent.content.length === 1 &&
+          !parsedContent.content[0].content);
+      setValue("editorContent", isEditorEmpty ? null : parsedContent, {
+        shouldValidate: true,
+      });
+    } catch (error) {
+      console.error("Failed to parse editor content:", error);
       setValue("editorContent", null, { shouldValidate: true });
     }
   };
 
-  // Main submission handler
   const onSubmit = async (data: AssignmentFormValues) => {
     let documentId = "";
-
     const creationPromise = new Promise<void>(async (resolve, reject) => {
       try {
-        // Step 1: Create the document based on the selected source
         if (data.documentSource === "upload" && data.file) {
           const formData = new FormData();
           formData.append("documentFile", data.file);
-          formData.append("name", data.title); // Use assignment title as document name
+          formData.append("name", data.title);
           const uploadResult = await uploadDocument(formData).unwrap();
           documentId = uploadResult.data.document.id;
         } else if (data.documentSource === "create" && data.editorContent) {
@@ -142,11 +169,8 @@ export default function CreateAssignmentWorkflow({
           documentId = newDocResult.data.document.id;
         }
 
-        if (!documentId) {
-          throw new Error("Failed to create the assignment document.");
-        }
+        if (!documentId) throw new Error("Document creation failed.");
 
-        // Step 2: Create the assignment and link the new document
         await createAssignment({
           courseId,
           documentId,
@@ -162,7 +186,7 @@ export default function CreateAssignmentWorkflow({
     });
 
     toast.promise(creationPromise, {
-      loading: "Creating and publishing assignment...",
+      loading: "Creating assignment...",
       success: () => {
         router.push(`/courses/${courseId}/teacher-view`);
         return "Assignment published successfully!";
@@ -172,118 +196,138 @@ export default function CreateAssignmentWorkflow({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 mt-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>1. Assignment Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="title">Title</Label>
-            <Input id="title" {...register("title")} />
-            {errors.title && (
-              <p className="text-sm text-destructive">{errors.title.message}</p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="instructions">Instructions (Optional)</Label>
-            <Textarea id="instructions" {...register("instructions")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Due Date (Optional)</Label>
-            <Controller
-              name="dueDate"
-              control={control}
-              render={({ field }) => (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+    <>
+      <AlertDialog open={!!pendingTab} onOpenChange={() => setPendingTab(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to switch?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Any information on the current tab will be cleared. This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSwitch}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>1. Assignment Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="title">Title</Label>
+              <Input id="title" {...register("title")} />
+              {errors.title && (
+                <p className="text-sm text-destructive">
+                  {errors.title.message}
+                </p>
               )}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>2. Assignment Document</CardTitle>
-          <CardDescription>
-            Provide the worksheet by uploading a file or creating one from
-            scratch.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={documentSource}
-            onValueChange={(value) =>
-              setValue("documentSource", value as "upload" | "create")
-            }
-          >
-            <TabsList>
-              <TabsTrigger value="upload">
-                <Upload className="mr-2 h-4 w-4" />
-                Upload File
-              </TabsTrigger>
-              <TabsTrigger value="create">
-                <FilePlus className="mr-2 h-4 w-4" />
-                Create from Scratch
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="upload" className="pt-4">
-              <Input
-                type="file"
-                onChange={(e) => handleFileChange(e.target.files?.[0])}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="instructions">Instructions (Optional)</Label>
+              <Textarea id="instructions" {...register("instructions")} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Due Date (Optional)</Label>
+              <Controller
+                name="dueDate"
+                control={control}
+                render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
               />
-              <p className="text-xs text-muted-foreground mt-2">
-                Note: Uploading a new file will clear any content you've written
-                in the "Create from Scratch" editor.
-              </p>
-            </TabsContent>
-            <TabsContent value="create" className="pt-4 border-t">
-              <TiptapEditor onUpdate={handleEditorUpdate} editable={true} />
-              <p className="text-xs text-muted-foreground mt-2">
-                Note: Writing in the editor will remove any file you've selected
-                for upload.
-              </p>
-            </TabsContent>
-          </Tabs>
-          {errors.documentSource && (
-            <p className="text-sm text-destructive mt-2">
-              {errors.documentSource.message}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="flex justify-end">
-        <Button type="submit" size="lg" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Publish Assignment
-        </Button>
-      </div>
-    </form>
+        <Card>
+          <CardHeader>
+            <CardTitle>2. Assignment Document</CardTitle>
+            <CardDescription>
+              Provide the worksheet by uploading a file or creating one from
+              scratch.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs
+              value={documentSource}
+              onValueChange={(value) =>
+                handleTabChange(value as DocumentSource)
+              }
+            >
+              <TabsList>
+                <TabsTrigger value="upload">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload File
+                </TabsTrigger>
+                <TabsTrigger value="create">
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  Create from Scratch
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="upload" className="pt-4">
+                <Input
+                  type="file"
+                  onChange={(e) =>
+                    setValue("file", e.target.files?.[0], {
+                      shouldValidate: true,
+                    })
+                  }
+                />
+              </TabsContent>
+              <TabsContent value="create" className="pt-4 border-t">
+                <TiptapEditor onUpdate={handleEditorUpdate} editable={true} />
+              </TabsContent>
+            </Tabs>
+            {errors.documentSource && (
+              <p className="text-sm text-destructive mt-2">
+                {errors.documentSource.message}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end">
+          <Button type="submit" size="lg" disabled={isLoading}>
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Publish Assignment
+          </Button>
+        </div>
+      </form>
+    </>
   );
 }
