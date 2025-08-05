@@ -99,18 +99,7 @@ export class AssignmentService {
    * [STUDENT] Gets all assignments from all of a student's courses
    * that they have not yet submitted.
    */
-  /**
-   * [STUDENT] Gets all assignments from all of a student's courses
-   * that they have not yet submitted.
-   */
-  /**
-   * [STUDENT] Gets all assignments from all of a student's courses
-   * that they have not yet submitted.
-   */
-  /**
-   * [STUDENT] Gets all assignments from all of a student's courses
-   * that they have not yet submitted. This is the definitive function.
-   */
+
   public async getPendingAssignmentsForStudent(studentId: string) {
     // 1. Find every assignment...
     return prisma.assignment.findMany({

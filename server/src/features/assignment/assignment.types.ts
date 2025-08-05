@@ -1,22 +1,40 @@
-import { SubmissionStatus } from "prisma/generated/prisma";
+//src/features/assignment/assignment.types.ts
 
-export interface GetSubmissionsQueryDto {
-  status?: SubmissionStatus;
-}
+import { Document } from "../document/document.types"; // Assuming this import path is correct
 
-export interface GradeSubmissionDto {
-  grade?: string;
-  comments?: string;
+// DTO for creating a new assignment
+export interface CreateAssignmentDto {
+  title: string;
+  instructions?: string;
+  dueDate?: string;
+  courseId: string;
   documentId: string;
 }
 
-export interface SubmitWorkDto {
-  documentId: string;
-  notes?: string;
+// Shape of an Assignment object from the backend
+export interface Assignment {
+  id: string;
+  title: string;
+  instructions: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  courseId: string;
+  authorId: string;
+  document: Document;
+  _count?: {
+    submissions: number;
+  };
+  course: {
+    subject: { name: string };
+    academicLevel: { name: string };
+    teachers: { displayName: string | null }[];
+  };
+  submissions: { id: string }[];
 }
 
-// DTO for saving a draft of a student's work
-export interface SaveDraftDto {
-  documentId: string;
-  notes?: string;
+// API response for a single assignment
+export interface AssignmentApiResponse {
+  status: string;
+  data: Assignment;
 }

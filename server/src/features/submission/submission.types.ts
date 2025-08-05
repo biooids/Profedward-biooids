@@ -1,3 +1,4 @@
+//src/features/submission/submission.types.ts
 import { SubmissionStatus } from "prisma/generated/prisma";
 
 // For filtering submissions by status
@@ -18,8 +19,7 @@ export interface SubmitWorkDto {
   notes?: string;
 }
 
-// --- THIS IS THE FIX ---
-// Add the missing DTO for saving a draft
+// For a student saving a draft of their work
 export interface SaveDraftDto {
   documentId: string;
   notes?: string;
