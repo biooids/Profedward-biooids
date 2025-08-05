@@ -155,6 +155,11 @@ export class CourseService {
       include: {
         academicLevel: true,
         subject: true,
+        teachers: {
+          select: {
+            displayName: true,
+          },
+        },
         _count: {
           select: { students: true, assignments: true },
         },

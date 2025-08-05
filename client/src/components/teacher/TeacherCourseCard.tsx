@@ -11,14 +11,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FileText } from "lucide-react";
 import { Course } from "@/lib/course/courseTypes";
-import { UserRole } from "@/lib/user/userTypes";
 import { cn } from "@/lib/utils";
 
-// --- THIS IS THE FIX ---
-// Add the missing interface definition here
-interface CourseCardProps {
+// The userRole is no longer needed in the props for this specific component
+interface TeacherCourseCardProps {
   course: Course;
-  userRole?: UserRole;
 }
 
 const getSubjectColor = (subjectName: string) => {
@@ -69,11 +66,11 @@ const AvatarGroup = ({
   );
 };
 
-export default function CourseCard({ course, userRole }: CourseCardProps) {
-  const courseDetailUrl =
-    userRole === UserRole.TEACHER
-      ? `/courses/${course.id}/teacher-view`
-      : `/courses/${course.id}/student-view`;
+// Remove userRole from the function signature
+export default function TeacherCourseCard({ course }: TeacherCourseCardProps) {
+  // --- THIS IS THE FIX ---
+  // The URL is now always the teacher-specific view.
+  const courseDetailUrl = `/courses/${course.id}/teacher-view`;
 
   const accentColor = getSubjectColor(course.subject.name);
 
