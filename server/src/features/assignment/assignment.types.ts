@@ -1,11 +1,22 @@
-/**
- * Data Transfer Object (DTO) for the request body when a teacher
- * creates a new assignment.
- */
-export interface CreateAssignmentDto {
-  title: string;
-  courseId: string;
-  documentId: string; // The ID of the pre-existing document/worksheet
-  instructions?: string;
-  dueDate?: string; // Use string for robust JSON transport, convert to Date on backend
+import { SubmissionStatus } from "prisma/generated/prisma";
+
+export interface GetSubmissionsQueryDto {
+  status?: SubmissionStatus;
+}
+
+export interface GradeSubmissionDto {
+  grade?: string;
+  comments?: string;
+  documentId: string;
+}
+
+export interface SubmitWorkDto {
+  documentId: string;
+  notes?: string;
+}
+
+// DTO for saving a draft of a student's work
+export interface SaveDraftDto {
+  documentId: string;
+  notes?: string;
 }

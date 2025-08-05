@@ -122,31 +122,20 @@ model Document {
   id                String    @id @default(uuid())
   name              String    // The display name of the document, editable by the user.
 
-  // --- Editable Content (for the in-app editor) ---
-  // The document's content stored in a structured format (e.g., Tiptap's JSON).
-  // This is the source of truth for editing and for generating new PDF/DOCX downloads.
   editableContent   Json?
-
-  // --- Original Static File (for initial uploads) ---
-  // The URL of the originally uploaded file (PDF, DOCX) on Cloudinary.
   originalFileUrl      String?
-  // The public_id from Cloudinary for managing the asset.
   originalFilePublicId String?
-  // The MIME type of the original file (e.g., "application/pdf").
   originalFileType     String?
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  // Every document is uploaded by a user.
   uploaderId        String
   uploader          User      @relation("UploadedBy", fields: [uploaderId], references: [id], onDelete: Cascade)
 
-  // A document can optionally belong to a personal Shelf.
   shelfId           String?
   shelf             Shelf?    @relation("ShelfDocuments", fields: [shelfId], references: [id])
   
-  // A document can be attached to one of the following academic models.
   assignment        Assignment? @relation("AssignmentDocument")
   submission        Submission? @relation("SubmissionDocument")
   correction        Correction? @relation("CorrectionDocument")
@@ -226,14 +215,13 @@ model Submission {
 
   assignmentId  String
   assignment    Assignment   @relation(fields: [assignmentId], references: [id])
-  status        SubmissionStatus @default(PENDING) // <-- ADD THIS LINE
+  status        SubmissionStatus @default(PENDING)
 
   studentId     String
   student       User         @relation("StudentSubmissions", fields: [studentId], references: [id])
 
-  // A student's submission consists of their version of the document.
-  documentId    String       @unique
-  document      Document     @relation("SubmissionDocument", fields: [documentId], references: [id])
+  documentId    String?      @unique
+  document      Document?    @relation("SubmissionDocument", fields: [documentId], references: [id])
 
   correction    Correction?
 

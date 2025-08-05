@@ -191,7 +191,7 @@ export default function TeacherCourseDetailView({
                     return (
                       <Link
                         key={assignment.id}
-                        href={`/courses/${courseId}/assignments/${assignment.id}`}
+                        href={`/courses/${courseId}/assignments/${assignment.id}/teacher-view`}
                         className="block"
                       >
                         <div className="flex items-center p-3 rounded-lg border hover:bg-muted transition-colors">

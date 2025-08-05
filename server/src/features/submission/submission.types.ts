@@ -12,9 +12,15 @@ export interface GradeSubmissionDto {
   documentId: string;
 }
 
-// --- ADD THIS NEW DTO ---
-// For a student submitting their work
+// For a student submitting their final work
 export interface SubmitWorkDto {
-  documentId: string; // The ID of the student's completed document
-  notes?: string; // Optional notes for the teacher
+  documentId: string;
+  notes?: string;
+}
+
+// --- THIS IS THE FIX ---
+// Add the missing DTO for saving a draft
+export interface SaveDraftDto {
+  documentId: string;
+  notes?: string;
 }

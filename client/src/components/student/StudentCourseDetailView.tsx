@@ -195,7 +195,7 @@ export default function StudentCourseDetailView({
                     return (
                       <Link
                         key={assignment.id}
-                        href={`/assignments/${assignment.id}/student-view`}
+                        href={`/courses/${courseId}/assignments/${assignment.id}/student-view`}
                         className="block"
                       >
                         <div className="flex items-center p-3 rounded-lg border hover:bg-muted transition-colors">

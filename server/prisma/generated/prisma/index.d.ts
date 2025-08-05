@@ -10735,7 +10735,7 @@ export namespace Prisma {
     assignmentId: string
     status: $Enums.SubmissionStatus
     studentId: string
-    documentId: string
+    documentId: string | null
     _count: SubmissionCountAggregateOutputType | null
     _min: SubmissionMinAggregateOutputType | null
     _max: SubmissionMaxAggregateOutputType | null
@@ -10765,7 +10765,7 @@ export namespace Prisma {
     documentId?: boolean
     assignment?: boolean | AssignmentDefaultArgs<ExtArgs>
     student?: boolean | UserDefaultArgs<ExtArgs>
-    document?: boolean | DocumentDefaultArgs<ExtArgs>
+    document?: boolean | Submission$documentArgs<ExtArgs>
     correction?: boolean | Submission$correctionArgs<ExtArgs>
   }, ExtArgs["result"]["submission"]>
 
@@ -10779,7 +10779,7 @@ export namespace Prisma {
     documentId?: boolean
     assignment?: boolean | AssignmentDefaultArgs<ExtArgs>
     student?: boolean | UserDefaultArgs<ExtArgs>
-    document?: boolean | DocumentDefaultArgs<ExtArgs>
+    document?: boolean | Submission$documentArgs<ExtArgs>
   }, ExtArgs["result"]["submission"]>
 
   export type SubmissionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10792,7 +10792,7 @@ export namespace Prisma {
     documentId?: boolean
     assignment?: boolean | AssignmentDefaultArgs<ExtArgs>
     student?: boolean | UserDefaultArgs<ExtArgs>
-    document?: boolean | DocumentDefaultArgs<ExtArgs>
+    document?: boolean | Submission$documentArgs<ExtArgs>
   }, ExtArgs["result"]["submission"]>
 
   export type SubmissionSelectScalar = {
@@ -10809,18 +10809,18 @@ export namespace Prisma {
   export type SubmissionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     assignment?: boolean | AssignmentDefaultArgs<ExtArgs>
     student?: boolean | UserDefaultArgs<ExtArgs>
-    document?: boolean | DocumentDefaultArgs<ExtArgs>
+    document?: boolean | Submission$documentArgs<ExtArgs>
     correction?: boolean | Submission$correctionArgs<ExtArgs>
   }
   export type SubmissionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     assignment?: boolean | AssignmentDefaultArgs<ExtArgs>
     student?: boolean | UserDefaultArgs<ExtArgs>
-    document?: boolean | DocumentDefaultArgs<ExtArgs>
+    document?: boolean | Submission$documentArgs<ExtArgs>
   }
   export type SubmissionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     assignment?: boolean | AssignmentDefaultArgs<ExtArgs>
     student?: boolean | UserDefaultArgs<ExtArgs>
-    document?: boolean | DocumentDefaultArgs<ExtArgs>
+    document?: boolean | Submission$documentArgs<ExtArgs>
   }
 
   export type $SubmissionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10828,7 +10828,7 @@ export namespace Prisma {
     objects: {
       assignment: Prisma.$AssignmentPayload<ExtArgs>
       student: Prisma.$UserPayload<ExtArgs>
-      document: Prisma.$DocumentPayload<ExtArgs>
+      document: Prisma.$DocumentPayload<ExtArgs> | null
       correction: Prisma.$CorrectionPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -10838,7 +10838,7 @@ export namespace Prisma {
       assignmentId: string
       status: $Enums.SubmissionStatus
       studentId: string
-      documentId: string
+      documentId: string | null
     }, ExtArgs["result"]["submission"]>
     composites: {}
   }
@@ -11235,7 +11235,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     assignment<T extends AssignmentDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AssignmentDefaultArgs<ExtArgs>>): Prisma__AssignmentClient<$Result.GetResult<Prisma.$AssignmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     student<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    document<T extends DocumentDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DocumentDefaultArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    document<T extends Submission$documentArgs<ExtArgs> = {}>(args?: Subset<T, Submission$documentArgs<ExtArgs>>): Prisma__DocumentClient<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     correction<T extends Submission$correctionArgs<ExtArgs> = {}>(args?: Subset<T, Submission$correctionArgs<ExtArgs>>): Prisma__CorrectionClient<$Result.GetResult<Prisma.$CorrectionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -11666,6 +11666,25 @@ export namespace Prisma {
      * Limit how many Submissions to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Submission.document
+   */
+  export type Submission$documentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Document
+     */
+    select?: DocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Document
+     */
+    omit?: DocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentInclude<ExtArgs> | null
+    where?: DocumentWhereInput
   }
 
   /**
@@ -17930,10 +17949,10 @@ export namespace Prisma {
     assignmentId?: StringFilter<"Submission"> | string
     status?: EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
     studentId?: StringFilter<"Submission"> | string
-    documentId?: StringFilter<"Submission"> | string
+    documentId?: StringNullableFilter<"Submission"> | string | null
     assignment?: XOR<AssignmentScalarRelationFilter, AssignmentWhereInput>
     student?: XOR<UserScalarRelationFilter, UserWhereInput>
-    document?: XOR<DocumentScalarRelationFilter, DocumentWhereInput>
+    document?: XOR<DocumentNullableScalarRelationFilter, DocumentWhereInput> | null
     correction?: XOR<CorrectionNullableScalarRelationFilter, CorrectionWhereInput> | null
   }
 
@@ -17944,7 +17963,7 @@ export namespace Prisma {
     assignmentId?: SortOrder
     status?: SortOrder
     studentId?: SortOrder
-    documentId?: SortOrder
+    documentId?: SortOrderInput | SortOrder
     assignment?: AssignmentOrderByWithRelationInput
     student?: UserOrderByWithRelationInput
     document?: DocumentOrderByWithRelationInput
@@ -17965,7 +17984,7 @@ export namespace Prisma {
     studentId?: StringFilter<"Submission"> | string
     assignment?: XOR<AssignmentScalarRelationFilter, AssignmentWhereInput>
     student?: XOR<UserScalarRelationFilter, UserWhereInput>
-    document?: XOR<DocumentScalarRelationFilter, DocumentWhereInput>
+    document?: XOR<DocumentNullableScalarRelationFilter, DocumentWhereInput> | null
     correction?: XOR<CorrectionNullableScalarRelationFilter, CorrectionWhereInput> | null
   }, "id" | "documentId" | "assignmentId_studentId">
 
@@ -17976,7 +17995,7 @@ export namespace Prisma {
     assignmentId?: SortOrder
     status?: SortOrder
     studentId?: SortOrder
-    documentId?: SortOrder
+    documentId?: SortOrderInput | SortOrder
     _count?: SubmissionCountOrderByAggregateInput
     _max?: SubmissionMaxOrderByAggregateInput
     _min?: SubmissionMinOrderByAggregateInput
@@ -17992,7 +18011,7 @@ export namespace Prisma {
     assignmentId?: StringWithAggregatesFilter<"Submission"> | string
     status?: EnumSubmissionStatusWithAggregatesFilter<"Submission"> | $Enums.SubmissionStatus
     studentId?: StringWithAggregatesFilter<"Submission"> | string
-    documentId?: StringWithAggregatesFilter<"Submission"> | string
+    documentId?: StringNullableWithAggregatesFilter<"Submission"> | string | null
   }
 
   export type CorrectionWhereInput = {
@@ -18858,7 +18877,7 @@ export namespace Prisma {
     status?: $Enums.SubmissionStatus
     assignment: AssignmentCreateNestedOneWithoutSubmissionsInput
     student: UserCreateNestedOneWithoutSubmissionsInput
-    document: DocumentCreateNestedOneWithoutSubmissionInput
+    document?: DocumentCreateNestedOneWithoutSubmissionInput
     correction?: CorrectionCreateNestedOneWithoutSubmissionInput
   }
 
@@ -18869,7 +18888,7 @@ export namespace Prisma {
     assignmentId: string
     status?: $Enums.SubmissionStatus
     studentId: string
-    documentId: string
+    documentId?: string | null
     correction?: CorrectionUncheckedCreateNestedOneWithoutSubmissionInput
   }
 
@@ -18880,7 +18899,7 @@ export namespace Prisma {
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     assignment?: AssignmentUpdateOneRequiredWithoutSubmissionsNestedInput
     student?: UserUpdateOneRequiredWithoutSubmissionsNestedInput
-    document?: DocumentUpdateOneRequiredWithoutSubmissionNestedInput
+    document?: DocumentUpdateOneWithoutSubmissionNestedInput
     correction?: CorrectionUpdateOneWithoutSubmissionNestedInput
   }
 
@@ -18891,7 +18910,7 @@ export namespace Prisma {
     assignmentId?: StringFieldUpdateOperationsInput | string
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     studentId?: StringFieldUpdateOperationsInput | string
-    documentId?: StringFieldUpdateOperationsInput | string
+    documentId?: NullableStringFieldUpdateOperationsInput | string | null
     correction?: CorrectionUncheckedUpdateOneWithoutSubmissionNestedInput
   }
 
@@ -18902,7 +18921,7 @@ export namespace Prisma {
     assignmentId: string
     status?: $Enums.SubmissionStatus
     studentId: string
-    documentId: string
+    documentId?: string | null
   }
 
   export type SubmissionUpdateManyMutationInput = {
@@ -18919,7 +18938,7 @@ export namespace Prisma {
     assignmentId?: StringFieldUpdateOperationsInput | string
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     studentId?: StringFieldUpdateOperationsInput | string
-    documentId?: StringFieldUpdateOperationsInput | string
+    documentId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CorrectionCreateInput = {
@@ -19814,6 +19833,11 @@ export namespace Prisma {
   export type AssignmentScalarRelationFilter = {
     is?: AssignmentWhereInput
     isNot?: AssignmentWhereInput
+  }
+
+  export type DocumentNullableScalarRelationFilter = {
+    is?: DocumentWhereInput | null
+    isNot?: DocumentWhereInput | null
   }
 
   export type SubmissionAssignmentIdStudentIdCompoundUniqueInput = {
@@ -20972,10 +20996,12 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutSubmissionsInput, UserUpdateWithoutSubmissionsInput>, UserUncheckedUpdateWithoutSubmissionsInput>
   }
 
-  export type DocumentUpdateOneRequiredWithoutSubmissionNestedInput = {
+  export type DocumentUpdateOneWithoutSubmissionNestedInput = {
     create?: XOR<DocumentCreateWithoutSubmissionInput, DocumentUncheckedCreateWithoutSubmissionInput>
     connectOrCreate?: DocumentCreateOrConnectWithoutSubmissionInput
     upsert?: DocumentUpsertWithoutSubmissionInput
+    disconnect?: DocumentWhereInput | boolean
+    delete?: DocumentWhereInput | boolean
     connect?: DocumentWhereUniqueInput
     update?: XOR<XOR<DocumentUpdateToOneWithWhereWithoutSubmissionInput, DocumentUpdateWithoutSubmissionInput>, DocumentUncheckedUpdateWithoutSubmissionInput>
   }
@@ -21768,7 +21794,7 @@ export namespace Prisma {
     notes?: string | null
     status?: $Enums.SubmissionStatus
     assignment: AssignmentCreateNestedOneWithoutSubmissionsInput
-    document: DocumentCreateNestedOneWithoutSubmissionInput
+    document?: DocumentCreateNestedOneWithoutSubmissionInput
     correction?: CorrectionCreateNestedOneWithoutSubmissionInput
   }
 
@@ -21778,7 +21804,7 @@ export namespace Prisma {
     notes?: string | null
     assignmentId: string
     status?: $Enums.SubmissionStatus
-    documentId: string
+    documentId?: string | null
     correction?: CorrectionUncheckedCreateNestedOneWithoutSubmissionInput
   }
 
@@ -22036,7 +22062,7 @@ export namespace Prisma {
     assignmentId?: StringFilter<"Submission"> | string
     status?: EnumSubmissionStatusFilter<"Submission"> | $Enums.SubmissionStatus
     studentId?: StringFilter<"Submission"> | string
-    documentId?: StringFilter<"Submission"> | string
+    documentId?: StringNullableFilter<"Submission"> | string | null
   }
 
   export type CorrectionUpsertWithWhereUniqueWithoutCorrectorInput = {
@@ -23192,7 +23218,7 @@ export namespace Prisma {
     notes?: string | null
     status?: $Enums.SubmissionStatus
     student: UserCreateNestedOneWithoutSubmissionsInput
-    document: DocumentCreateNestedOneWithoutSubmissionInput
+    document?: DocumentCreateNestedOneWithoutSubmissionInput
     correction?: CorrectionCreateNestedOneWithoutSubmissionInput
   }
 
@@ -23202,7 +23228,7 @@ export namespace Prisma {
     notes?: string | null
     status?: $Enums.SubmissionStatus
     studentId: string
-    documentId: string
+    documentId?: string | null
     correction?: CorrectionUncheckedCreateNestedOneWithoutSubmissionInput
   }
 
@@ -23698,7 +23724,7 @@ export namespace Prisma {
     status?: $Enums.SubmissionStatus
     assignment: AssignmentCreateNestedOneWithoutSubmissionsInput
     student: UserCreateNestedOneWithoutSubmissionsInput
-    document: DocumentCreateNestedOneWithoutSubmissionInput
+    document?: DocumentCreateNestedOneWithoutSubmissionInput
   }
 
   export type SubmissionUncheckedCreateWithoutCorrectionInput = {
@@ -23708,7 +23734,7 @@ export namespace Prisma {
     assignmentId: string
     status?: $Enums.SubmissionStatus
     studentId: string
-    documentId: string
+    documentId?: string | null
   }
 
   export type SubmissionCreateOrConnectWithoutCorrectionInput = {
@@ -23828,7 +23854,7 @@ export namespace Prisma {
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     assignment?: AssignmentUpdateOneRequiredWithoutSubmissionsNestedInput
     student?: UserUpdateOneRequiredWithoutSubmissionsNestedInput
-    document?: DocumentUpdateOneRequiredWithoutSubmissionNestedInput
+    document?: DocumentUpdateOneWithoutSubmissionNestedInput
   }
 
   export type SubmissionUncheckedUpdateWithoutCorrectionInput = {
@@ -23838,7 +23864,7 @@ export namespace Prisma {
     assignmentId?: StringFieldUpdateOperationsInput | string
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     studentId?: StringFieldUpdateOperationsInput | string
-    documentId?: StringFieldUpdateOperationsInput | string
+    documentId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUpsertWithoutCorrectionsInput = {
@@ -24396,7 +24422,7 @@ export namespace Prisma {
     notes?: string | null
     assignmentId: string
     status?: $Enums.SubmissionStatus
-    documentId: string
+    documentId?: string | null
   }
 
   export type CorrectionCreateManyCorrectorInput = {
@@ -24618,7 +24644,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     assignment?: AssignmentUpdateOneRequiredWithoutSubmissionsNestedInput
-    document?: DocumentUpdateOneRequiredWithoutSubmissionNestedInput
+    document?: DocumentUpdateOneWithoutSubmissionNestedInput
     correction?: CorrectionUpdateOneWithoutSubmissionNestedInput
   }
 
@@ -24628,7 +24654,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignmentId?: StringFieldUpdateOperationsInput | string
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
-    documentId?: StringFieldUpdateOperationsInput | string
+    documentId?: NullableStringFieldUpdateOperationsInput | string | null
     correction?: CorrectionUncheckedUpdateOneWithoutSubmissionNestedInput
   }
 
@@ -24638,7 +24664,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assignmentId?: StringFieldUpdateOperationsInput | string
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
-    documentId?: StringFieldUpdateOperationsInput | string
+    documentId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CorrectionUpdateWithoutCorrectorInput = {
@@ -24992,7 +25018,7 @@ export namespace Prisma {
     notes?: string | null
     status?: $Enums.SubmissionStatus
     studentId: string
-    documentId: string
+    documentId?: string | null
   }
 
   export type SubmissionUpdateWithoutAssignmentInput = {
@@ -25001,7 +25027,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     student?: UserUpdateOneRequiredWithoutSubmissionsNestedInput
-    document?: DocumentUpdateOneRequiredWithoutSubmissionNestedInput
+    document?: DocumentUpdateOneWithoutSubmissionNestedInput
     correction?: CorrectionUpdateOneWithoutSubmissionNestedInput
   }
 
@@ -25011,7 +25037,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     studentId?: StringFieldUpdateOperationsInput | string
-    documentId?: StringFieldUpdateOperationsInput | string
+    documentId?: NullableStringFieldUpdateOperationsInput | string | null
     correction?: CorrectionUncheckedUpdateOneWithoutSubmissionNestedInput
   }
 
@@ -25021,7 +25047,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumSubmissionStatusFieldUpdateOperationsInput | $Enums.SubmissionStatus
     studentId?: StringFieldUpdateOperationsInput | string
-    documentId?: StringFieldUpdateOperationsInput | string
+    documentId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ChatMessageCreateManyConversationInput = {

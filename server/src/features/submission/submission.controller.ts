@@ -5,6 +5,7 @@ import {
   GetSubmissionsQueryDto,
   GradeSubmissionDto,
   SubmitWorkDto,
+  SaveDraftDto,
 } from "./submission.types";
 
 class SubmissionController {
@@ -65,6 +66,28 @@ class SubmissionController {
       res.status(200).json({ status: "success", data: courses });
     }
   );
+
+  findOrCreateSubmission = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user!.id;
+    const { assignmentId } = req.params;
+    const submission = await submissionService.findOrCreateSubmissionForStudent(
+      studentId,
+      assignmentId
+    );
+    res.status(200).json({ status: "success", data: submission });
+  });
+
+  saveDraft = asyncHandler(async (req: Request, res: Response) => {
+    const studentId = req.user!.id;
+    const { submissionId } = req.params;
+    const data = req.body as SaveDraftDto;
+    const updatedSubmission = await submissionService.saveSubmissionDraft(
+      submissionId,
+      studentId,
+      data
+    );
+    res.status(200).json({ status: "success", data: updatedSubmission });
+  });
 }
 
 export const submissionController = new SubmissionController();

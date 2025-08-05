@@ -4,20 +4,18 @@ import {
   GradeSubmissionDto,
   GetSubmissionsQueryDto,
   SubmitWorkDto,
+  SaveDraftDto,
 } from "./submission.types";
 import { Prisma, SubmissionStatus } from "prisma/generated/prisma";
 
 export class SubmissionService {
   /**
    * Gets submissions for all assignments created by a teacher.
-   * @param teacherId The ID of the teacher.
-   * @param query Query parameters for filtering.
    */
   public async getSubmissionsForTeacher(
     teacherId: string,
     query: GetSubmissionsQueryDto
   ) {
-    // FIX 1: Build the 'where' clause conditionally.
     const where: Prisma.SubmissionWhereInput = {
       assignment: {
         authorId: teacherId,
@@ -29,7 +27,7 @@ export class SubmissionService {
     }
 
     return prisma.submission.findMany({
-      where, // Use the conditionally built where clause
+      where,
       include: {
         student: {
           select: { id: true, displayName: true, profileImage: true },
@@ -44,9 +42,6 @@ export class SubmissionService {
 
   /**
    * Grades a student's submission.
-   * @param submissionId The ID of the submission to grade.
-   * @param correctorId The ID of the teacher grading it.
-   * @param data The grading data.
    */
   public async gradeSubmission(
     submissionId: string,
@@ -55,7 +50,6 @@ export class SubmissionService {
   ) {
     const submission = await prisma.submission.findUnique({
       where: { id: submissionId },
-      // FIX 2: Explicitly include the 'teachers' from the course.
       include: {
         assignment: {
           include: {
@@ -73,7 +67,6 @@ export class SubmissionService {
       throw createHttpError(404, "Submission not found.");
     }
 
-    // This check now works because 'teachers' is included in the query result.
     const isTeacher = submission.assignment.course.teachers.some(
       (teacher) => teacher.id === correctorId
     );
@@ -87,7 +80,6 @@ export class SubmissionService {
     return prisma.$transaction(async (tx) => {
       const newCorrection = await tx.correction.create({
         data: {
-          // FIX 3: Handle potential 'undefined' values.
           grade: data.grade ?? null,
           comments: data.comments ?? null,
           submission: { connect: { id: submissionId } },
@@ -107,16 +99,6 @@ export class SubmissionService {
 
   /**
    * Gets all submissions for a specific student.
-   * @param studentId The ID of the logged-in student.
-   * @param query Query parameters for filtering by status.
-   */
-  /**
-   * [STUDENT] Gets all submissions for a student.
-   * This now includes a "find or create" logic to handle late enrollments.
-   */
-  /**
-   * [STUDENT] Gets all submissions for a student.
-   * This now includes a "find or create" logic to handle late enrollments.
    */
   public async getSubmissionsForStudent(
     studentId: string,
@@ -132,10 +114,10 @@ export class SubmissionService {
     return prisma.submission.findMany({
       where,
       include: {
-        document: true, // <-- ADD THIS LINE to include the student's document
+        document: true,
         assignment: {
           include: {
-            document: true, // This is the teacher's original document
+            document: true,
             course: {
               include: {
                 subject: true,
@@ -160,21 +142,91 @@ export class SubmissionService {
   }
 
   /**
-   * Allows a student to submit their work for an assignment.
-   * @param submissionId The ID of their pending submission record.
-   * @param studentId The ID of the student submitting.
-   * @param data The submission data, including the document ID.
+   * [STUDENT] Finds a student's submission for a specific assignment.
+   * If one doesn't exist, it creates a new 'PENDING' submission record.
+   */
+  public async findOrCreateSubmissionForStudent(
+    studentId: string,
+    assignmentId: string
+  ) {
+    const assignment = await prisma.assignment.findFirst({
+      where: {
+        id: assignmentId,
+        course: { students: { some: { id: studentId } } },
+      },
+    });
+
+    if (!assignment) {
+      throw createHttpError(
+        404,
+        "Assignment not found or you are not enrolled in this course."
+      );
+    }
+
+    const existingSubmission = await prisma.submission.findFirst({
+      where: { assignmentId, studentId },
+    });
+
+    if (existingSubmission) {
+      return existingSubmission;
+    }
+
+    return prisma.submission.create({
+      data: {
+        student: { connect: { id: studentId } },
+        assignment: { connect: { id: assignmentId } },
+        status: SubmissionStatus.PENDING,
+      },
+    });
+  }
+
+  /**
+   * [STUDENT] Saves a draft of a student's work without submitting it.
+   */
+  public async saveSubmissionDraft(
+    submissionId: string,
+    studentId: string,
+    data: SaveDraftDto
+  ) {
+    const submission = await prisma.submission.findFirst({
+      where: { id: submissionId, studentId },
+    });
+
+    if (!submission) {
+      throw createHttpError(404, "Submission not found or access denied.");
+    }
+
+    if (
+      submission.status !== SubmissionStatus.PENDING &&
+      submission.status !== SubmissionStatus.RESUBMITTED
+    ) {
+      throw createHttpError(
+        403,
+        "This assignment has already been submitted and cannot be edited."
+      );
+    }
+
+    return prisma.submission.update({
+      where: { id: submissionId },
+      data: {
+        documentId: data.documentId,
+        notes: data.notes ?? null,
+      },
+    });
+  }
+
+  /**
+   * Allows a student to submit their final work for an assignment.
    */
   public async submitWork(
     submissionId: string,
     studentId: string,
     data: SubmitWorkDto
   ) {
-    // 1. Find the original submission record
     const submission = await prisma.submission.findFirst({
       where: {
         id: submissionId,
-        studentId: studentId, // Ensure the student owns this submission
+        studentId: studentId,
       },
     });
 
@@ -186,8 +238,8 @@ export class SubmissionService {
     }
 
     if (
-      submission.status !== "PENDING" &&
-      submission.status !== "RESUBMITTED"
+      submission.status !== SubmissionStatus.PENDING &&
+      submission.status !== SubmissionStatus.RESUBMITTED
     ) {
       throw createHttpError(
         400,
@@ -195,7 +247,6 @@ export class SubmissionService {
       );
     }
 
-    // 2. Update the submission with the new document and status
     return prisma.submission.update({
       where: {
         id: submissionId,
@@ -204,28 +255,20 @@ export class SubmissionService {
         documentId: data.documentId,
         notes: data.notes ?? null,
         status: "SUBMITTED",
-        submittedAt: new Date(), // Update the submission timestamp
+        submittedAt: new Date(),
       },
     });
   }
 
   /**
-   * [STUDENT] Gets all courses that have pending submissions for a student,
-   * with the pending submissions included.
-   */ /**
-   * [STUDENT] Gets all courses that have pending submissions for a student,
-   * with the pending submissions included.
+   * [STUDENT] Gets all courses that have pending submissions for a student.
    */
   public async getPendingAssignmentsByCourse(studentId: string) {
     return prisma.course.findMany({
-      // Find courses where...
       where: {
-        // 1. The student is enrolled
         students: { some: { id: studentId } },
-        // 2. And the course has at least one assignment...
         assignments: {
           some: {
-            // ...that has a PENDING submission for this student.
             submissions: {
               some: {
                 studentId: studentId,
@@ -235,7 +278,6 @@ export class SubmissionService {
           },
         },
       },
-      // Include all the details we need for the UI
       include: {
         subject: true,
         academicLevel: true,
@@ -244,12 +286,9 @@ export class SubmissionService {
             displayName: true,
           },
         },
-        // The relation on Course is 'assignments', not 'submissions'
         assignments: {
-          // For each assignment, include its submissions...
           include: {
             submissions: {
-              // ...but only the pending ones for this specific student.
               where: {
                 studentId: studentId,
                 status: "PENDING",

@@ -1,4 +1,4 @@
-//src/components/teacher/AssignmentView.tsx
+//src/components/teacher/TeacherAssignmentView.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,7 +27,7 @@ const DocumentViewer = dynamic(
   { ssr: false, loading: () => <p>Loading Viewer...</p> }
 );
 
-export default function AssignmentView({
+export default function TeacherAssignmentView({
   assignmentId,
 }: {
   assignmentId: string;
