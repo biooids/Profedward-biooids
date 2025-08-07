@@ -29,7 +29,7 @@ export class SubmissionService {
         student: {
           select: { id: true, displayName: true, profileImage: true },
         },
-        assignment: { select: { id: true, title: true } },
+        assignment: { select: { id: true, title: true, courseId: true } },
       },
       orderBy: {
         submittedAt: "desc",
@@ -37,11 +37,18 @@ export class SubmissionService {
     });
   }
 
+  /**
+   * Grades a student's submission. This is the final action in the grading workflow.
+   * @param submissionId The ID of the submission to grade.
+   * @param correctorId The ID of the teacher grading it.
+   * @param data The grading data (grade, comments, and marked-up documentId).
+   */
   public async gradeSubmission(
     submissionId: string,
     correctorId: string,
     data: GradeSubmissionDto
   ) {
+    // 1. Find the submission and include course teachers for permission check
     const submission = await prisma.submission.findUnique({
       where: { id: submissionId },
       include: {
@@ -61,6 +68,7 @@ export class SubmissionService {
       throw createHttpError(404, "Submission not found.");
     }
 
+    // 2. Verify that the user is a teacher for this specific course
     const isTeacher = submission.assignment.course.teachers.some(
       (teacher) => teacher.id === correctorId
     );
@@ -71,7 +79,9 @@ export class SubmissionService {
       );
     }
 
+    // 3. Use a transaction to perform both database writes at once
     return prisma.$transaction(async (tx) => {
+      // Step A: Create the new Correction record
       const newCorrection = await tx.correction.create({
         data: {
           grade: data.grade ?? null,
@@ -82,6 +92,7 @@ export class SubmissionService {
         },
       });
 
+      // Step B: Update the original Submission's status to GRADED
       const updatedSubmission = await tx.submission.update({
         where: { id: submissionId },
         data: { status: SubmissionStatus.GRADED },
@@ -292,6 +303,75 @@ export class SubmissionService {
         },
       },
     });
+  }
+
+  public async getSubmissionByIdForTeacher(
+    submissionId: string,
+    teacherId: string
+  ) {
+    const submission = await prisma.submission.findFirst({
+      where: {
+        id: submissionId,
+        // Security check: ensure the teacher is part of the course
+        assignment: {
+          course: {
+            teachers: { some: { id: teacherId } },
+          },
+        },
+      },
+      include: {
+        student: true,
+        document: true, // The student's submitted document
+        assignment: {
+          include: {
+            document: true, // The teacher's original worksheet
+          },
+        },
+        correction: {
+          include: {
+            document: true, // The teacher's marked-up feedback document
+          },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw createHttpError(404, "Submission not found or access denied.");
+    }
+    return submission;
+  }
+
+  public async getGradedSubmissionForStudent(
+    submissionId: string,
+    studentId: string
+  ) {
+    const submission = await prisma.submission.findFirst({
+      where: {
+        id: submissionId,
+        studentId: studentId, // Security check: ensure student owns this submission
+      },
+      include: {
+        document: true, // The student's original submitted document
+        assignment: {
+          select: {
+            title: true,
+          },
+        },
+        correction: {
+          include: {
+            document: true, // The teacher's marked-up feedback document
+          },
+        },
+      },
+    });
+
+    if (!submission) {
+      throw createHttpError(
+        404,
+        "Graded submission not found or access denied."
+      );
+    }
+    return submission;
   }
 }
 

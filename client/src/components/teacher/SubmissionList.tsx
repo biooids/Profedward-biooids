@@ -2,32 +2,17 @@
 
 "use client";
 
-import { useGetTeacherSubmissionsQuery } from "@/lib/submission/submissionApiSlice";
-import { SubmissionStatus } from "@/lib/submission/submissionTypes";
-import { Loader2 } from "lucide-react";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import TeacherSubmissionCard from "./TeacherSubmissionCard";
+import { Submission } from "@/lib/submission/submissionTypes";
 
 interface SubmissionListProps {
-  status: SubmissionStatus;
+  submissions: Submission[];
 }
 
-export default function SubmissionList({ status }: SubmissionListProps) {
-  const { data: submissions, isLoading } = useGetTeacherSubmissionsQuery({
-    status,
-  });
-
-  if (isLoading) {
-    return <Loader2 className="h-6 w-6 animate-spin" />;
-  }
-
+export default function SubmissionList({ submissions }: SubmissionListProps) {
   if (!submissions || submissions.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-center py-10 text-muted-foreground">
         No submissions found in this category.
       </p>
     );
@@ -35,17 +20,8 @@ export default function SubmissionList({ status }: SubmissionListProps) {
 
   return (
     <div className="space-y-4">
-      {submissions.map((sub) => (
-        <Card key={sub.id}>
-          <CardHeader>
-            <CardTitle>{sub.student.displayName}</CardTitle>
-            <CardDescription>
-              Assignment: {sub.assignment.title} • Submitted:{" "}
-              {new Date(sub.submittedAt).toLocaleString()}
-            </CardDescription>
-          </CardHeader>
-          {/* In a real app, clicking this card would go to the grading page */}
-        </Card>
+      {submissions.map((submission) => (
+        <TeacherSubmissionCard key={submission.id} submission={submission} />
       ))}
     </div>
   );

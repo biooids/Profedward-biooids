@@ -38,9 +38,11 @@ export default function SubmissionCard({
   const teacherName =
     submission.assignment.course.teachers[0]?.displayName || "N/A";
 
-  // --- THIS IS THE FIX ---
-  // Construct the full, correct URL including the courseId.
-  const linkHref = `/courses/${submission.assignment.courseId}/assignments/${submission.assignment.id}/student-view`;
+  // This link is now conditional based on the submission's status
+  const linkHref =
+    submission.status === SubmissionStatus.GRADED
+      ? `/grade/submission/${submission.id}/student-view`
+      : `/courses/${submission.assignment.courseId}/assignments/${submission.assignment.id}/student-view`;
 
   const getButtonText = () => {
     if (submission.status === SubmissionStatus.PENDING)

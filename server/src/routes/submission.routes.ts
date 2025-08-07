@@ -1,4 +1,4 @@
-//src/routes/submission.routes.ts
+//src/features/routes/submission.routes.ts
 import { Router } from "express";
 import { submissionController } from "../features/submission/submission.controller";
 import { verifyToken } from "../middleware/auth.middleware";
@@ -11,23 +11,24 @@ router.use(verifyToken);
 router.get("/teacher", submissionController.getSubmissionsForTeacher);
 router.post("/:submissionId/correct", submissionController.gradeSubmission);
 router.get(
-  "/student/pending-by-course",
-  submissionController.getPendingAssignmentsByCourse
+  "/:submissionId/teacher",
+  submissionController.getSubmissionForGrading
 );
 
 // --- Student routes ---
 router.get("/student", submissionController.getSubmissionsForStudent);
-
-// Find or create a submission record for a given assignment
 router.get(
   "/assignment/:assignmentId/student",
   submissionController.findOrCreateSubmission
 );
-
-// Save a draft of a submission
 router.patch("/:submissionId/draft", submissionController.saveDraft);
-
-// Submit the final work
 router.patch("/:submissionId/submit", submissionController.submitWork);
+
+// --- NEW ROUTE ---
+// Endpoint for a student to fetch their own graded submission
+router.get(
+  "/:submissionId/graded-student-view",
+  submissionController.getGradedSubmissionForStudent
+);
 
 export default router;

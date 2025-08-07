@@ -88,6 +88,21 @@ export const submissionApiSlice = createApi({
       transformResponse: (response: { data: any[] }) => response.data,
       providesTags: ["StudentSubmissionList"],
     }),
+
+    getSubmissionForGrading: builder.query<StudentSubmission, string>({
+      query: (submissionId) => `/submissions/${submissionId}/teacher`,
+      transformResponse: (response: { data: StudentSubmission }) =>
+        response.data,
+      providesTags: (_result, _error, id) => [
+        { type: "StudentSubmission", id },
+      ],
+    }),
+    getGradedSubmission: builder.query<StudentSubmission, string>({
+      query: (submissionId) =>
+        `/submissions/${submissionId}/graded-student-view`,
+      transformResponse: (response: { data: StudentSubmission }) =>
+        response.data,
+    }),
   }),
 });
 
@@ -99,4 +114,6 @@ export const {
   useGetPendingAssignmentsByCourseQuery,
   useFindOrCreateSubmissionQuery,
   useSaveDraftMutation,
+  useGetSubmissionForGradingQuery,
+  useGetGradedSubmissionQuery,
 } = submissionApiSlice;

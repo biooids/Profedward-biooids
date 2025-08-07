@@ -26,11 +26,13 @@ class SubmissionController {
     const correctorId = req.user!.id;
     const { submissionId } = req.params;
     const gradingData = req.body as GradeSubmissionDto;
+
     const result = await submissionService.gradeSubmission(
       submissionId,
       correctorId,
       gradingData
     );
+
     res.status(200).json({ status: "success", data: result });
   });
 
@@ -89,6 +91,30 @@ class SubmissionController {
     );
     res.status(200).json({ status: "success", data: updatedSubmission });
   });
+
+  getSubmissionForGrading = asyncHandler(
+    async (req: Request, res: Response) => {
+      const teacherId = req.user!.id;
+      const { submissionId } = req.params;
+      const submission = await submissionService.getSubmissionByIdForTeacher(
+        submissionId,
+        teacherId
+      );
+      res.status(200).json({ status: "success", data: submission });
+    }
+  );
+
+  getGradedSubmissionForStudent = asyncHandler(
+    async (req: Request, res: Response) => {
+      const studentId = req.user!.id;
+      const { submissionId } = req.params;
+      const submission = await submissionService.getGradedSubmissionForStudent(
+        submissionId,
+        studentId
+      );
+      res.status(200).json({ status: "success", data: submission });
+    }
+  );
 }
 
 export const submissionController = new SubmissionController();

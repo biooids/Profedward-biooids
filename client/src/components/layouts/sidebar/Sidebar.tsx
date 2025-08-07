@@ -21,23 +21,23 @@ import { Skeleton } from "@/components/ui/skeleton"; // Import the Skeleton comp
 
 const navConfig = {
   [UserRole.GENERAL]: [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/", label: "Home", icon: Home },
     { href: "/documents", label: "My Documents", icon: File },
   ],
   [UserRole.STUDENT]: [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/", label: "Home", icon: Home },
     { href: "/documents", label: "My Documents", icon: File },
     { href: "/courses", label: "My Courses", icon: BookOpen },
     { href: "/assignments", label: "Assignments", icon: CheckSquare },
   ],
   [UserRole.TEACHER]: [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/", label: "Home", icon: Home },
     { href: "/documents", label: "My Documents", icon: File },
     { href: "/courses", label: "My Courses", icon: BookOpen },
     { href: "/assignments", label: "Assignments", icon: CheckSquare },
   ],
   [UserRole.ADMIN]: [
-    { href: "/admin/dashboard", label: "Dashboard", icon: Home },
+    { href: "/", label: "Home", icon: Home },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/courses", label: "Courses", icon: BookOpen },
     { href: "/admin/settings", label: "Settings", icon: Settings }, // <-- ADD THIS LINE
