@@ -1,3 +1,5 @@
+//src/components/student/StudentCourseCard.tsx
+
 "use client";
 
 import Link from "next/link";

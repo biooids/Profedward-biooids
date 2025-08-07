@@ -1,3 +1,4 @@
+//src/components/teacher/TeacherCoursesDashboard.tsx
 "use client";
 
 import { useGetMyCoursesQuery } from "@/lib/course/courseApiSlice";
