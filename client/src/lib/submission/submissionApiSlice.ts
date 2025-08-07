@@ -1,3 +1,5 @@
+//src/lib/submission/submissionApiSlice.ts
+
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "../api/baseQueryWithReauth";
 import {
@@ -6,19 +8,17 @@ import {
   GetSubmissionsQueryDto,
   GradeSubmissionDto,
   SubmitWorkDto,
+  SaveDraftDto,
 } from "./submissionTypes";
 
 export const submissionApiSlice = createApi({
   reducerPath: "submissionApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["SubmissionList", "StudentSubmissionList"], // Updated tags
+  tagTypes: ["SubmissionList", "StudentSubmissionList", "StudentSubmission"],
   endpoints: (builder) => ({
     // --- TEACHER HOOKS ---
     getTeacherSubmissions: builder.query<Submission[], GetSubmissionsQueryDto>({
-      query: (params) => ({
-        url: "/submissions/teacher",
-        params,
-      }),
+      query: (params) => ({ url: "/submissions/teacher", params }),
       transformResponse: (response: { data: Submission[] }) => response.data,
       providesTags: ["SubmissionList"],
     }),
@@ -40,13 +40,35 @@ export const submissionApiSlice = createApi({
       StudentSubmission[],
       GetSubmissionsQueryDto
     >({
-      query: (params) => ({
-        url: "/submissions/student",
-        params,
-      }),
+      query: (params) => ({ url: "/submissions/student", params }),
       transformResponse: (response: { data: StudentSubmission[] }) =>
         response.data,
       providesTags: ["StudentSubmissionList"],
+    }),
+
+    // --- ADD THIS NEW QUERY ---
+    findOrCreateSubmission: builder.query<StudentSubmission, string>({
+      query: (assignmentId) =>
+        `/submissions/assignment/${assignmentId}/student`,
+      transformResponse: (response: { data: StudentSubmission }) =>
+        response.data,
+      providesTags: (result) =>
+        result ? [{ type: "StudentSubmission", id: result.id }] : [],
+    }),
+
+    // --- ADD THIS NEW MUTATION ---
+    saveDraft: builder.mutation<
+      void,
+      { submissionId: string; data: SaveDraftDto }
+    >({
+      query: ({ submissionId, data }) => ({
+        url: `/submissions/${submissionId}/draft`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { submissionId }) => [
+        { type: "StudentSubmission", id: submissionId },
+      ],
     }),
 
     submitWork: builder.mutation<
@@ -58,13 +80,12 @@ export const submissionApiSlice = createApi({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["StudentSubmissionList"],
+      invalidatesTags: ["StudentSubmissionList", "StudentSubmission"],
     }),
 
     getPendingAssignmentsByCourse: builder.query<any[], void>({
       query: () => "/submissions/student/pending-by-course",
       transformResponse: (response: { data: any[] }) => response.data,
-      // This list is invalidated whenever work is submitted
       providesTags: ["StudentSubmissionList"],
     }),
   }),
@@ -73,7 +94,9 @@ export const submissionApiSlice = createApi({
 export const {
   useGetTeacherSubmissionsQuery,
   useGradeSubmissionMutation,
-  useGetSubmissionsForStudentQuery, // <-- Student hook
-  useSubmitWorkMutation, // <-- Student hook
+  useGetSubmissionsForStudentQuery,
+  useSubmitWorkMutation,
   useGetPendingAssignmentsByCourseQuery,
+  useFindOrCreateSubmissionQuery,
+  useSaveDraftMutation,
 } = submissionApiSlice;

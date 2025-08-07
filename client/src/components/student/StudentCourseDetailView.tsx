@@ -1,3 +1,5 @@
+//src/lib/submission/submissionTypes.ts
+
 "use client";
 
 import { useGetCourseDetailsForStudentQuery } from "@/lib/course/courseApiSlice";

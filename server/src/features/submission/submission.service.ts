@@ -1,4 +1,3 @@
-//src/features/submission/submission.service.ts
 import prisma from "../../db/prisma";
 import { createHttpError } from "../../utils/error.factory";
 import {
@@ -10,9 +9,6 @@ import {
 import { Prisma, SubmissionStatus } from "prisma/generated/prisma";
 
 export class SubmissionService {
-  /**
-   * Gets submissions for all assignments created by a teacher.
-   */
   public async getSubmissionsForTeacher(
     teacherId: string,
     query: GetSubmissionsQueryDto
@@ -41,9 +37,6 @@ export class SubmissionService {
     });
   }
 
-  /**
-   * Grades a student's submission.
-   */
   public async gradeSubmission(
     submissionId: string,
     correctorId: string,
@@ -98,9 +91,6 @@ export class SubmissionService {
     });
   }
 
-  /**
-   * Gets all submissions for a specific student.
-   */
   public async getSubmissionsForStudent(
     studentId: string,
     query: GetSubmissionsQueryDto
@@ -142,48 +132,57 @@ export class SubmissionService {
     });
   }
 
-  /**
-   * [STUDENT] Finds a student's submission for a specific assignment.
-   * If one doesn't exist, it creates a new 'PENDING' submission record.
-   */
   public async findOrCreateSubmissionForStudent(
     studentId: string,
     assignmentId: string
   ) {
-    const assignment = await prisma.assignment.findFirst({
+    // First, verify the student has access to this assignment
+    const assignmentCheck = await prisma.assignment.findFirst({
       where: {
         id: assignmentId,
         course: { students: { some: { id: studentId } } },
       },
     });
 
-    if (!assignment) {
+    if (!assignmentCheck) {
       throw createHttpError(
         404,
         "Assignment not found or you are not enrolled in this course."
       );
     }
 
-    const existingSubmission = await prisma.submission.findFirst({
-      where: { assignmentId, studentId },
-    });
-
-    if (existingSubmission) {
-      return existingSubmission;
-    }
-
-    return prisma.submission.create({
-      data: {
+    // Use upsert to find the submission or create it if it doesn't exist
+    const submission = await prisma.submission.upsert({
+      where: {
+        assignmentId_studentId: {
+          assignmentId,
+          studentId,
+        },
+      },
+      // If creating, set the basic data
+      create: {
         student: { connect: { id: studentId } },
         assignment: { connect: { id: assignmentId } },
         status: SubmissionStatus.PENDING,
       },
+      // If updating (i.e., finding), do nothing
+      update: {},
+
+      // --- THIS IS THE FIX ---
+      // Always include the necessary related data in the response
+      include: {
+        document: true, // The student's own document (which may be null)
+        assignment: {
+          include: {
+            document: true, // The teacher's original document
+          },
+        },
+      },
     });
+
+    return submission;
   }
 
-  /**
-   * [STUDENT] Saves a draft of a student's work without submitting it.
-   */
   public async saveSubmissionDraft(
     submissionId: string,
     studentId: string,
@@ -216,9 +215,6 @@ export class SubmissionService {
     });
   }
 
-  /**
-   * Allows a student to submit their final work for an assignment.
-   */
   public async submitWork(
     submissionId: string,
     studentId: string,
@@ -261,9 +257,6 @@ export class SubmissionService {
     });
   }
 
-  /**
-   * [STUDENT] Gets all courses that have pending submissions for a student.
-   */
   public async getPendingAssignmentsByCourse(studentId: string) {
     return prisma.course.findMany({
       where: {

@@ -1,58 +1,153 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useGetAssignmentForStudentQuery } from "@/lib/assignment/assignmentApiSlice";
-import { useGetSubmissionsForStudentQuery } from "@/lib/submission/submissionApiSlice";
-import { Loader2, Clock, Info } from "lucide-react";
+import {
+  useFindOrCreateSubmissionQuery,
+  useSaveDraftMutation,
+  useSubmitWorkMutation,
+} from "@/lib/submission/submissionApiSlice";
+import {
+  useCreateEditableDocumentMutation,
+  useUpdateDocumentMutation,
+} from "@/lib/document/documentApiSlice";
+import { Loader2, Save, Send, Clock, Info, Edit, FileScan } from "lucide-react";
 import {
   PageHeader,
   PageHeaderDescription,
   PageHeaderHeading,
 } from "@/components/layouts/PageHeader";
 import { Button } from "@/components/ui/button";
-// --- THIS IS THE FIX ---
-// Add 'CardDescription' to this import line
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TiptapEditor from "@/components/editor/TiptapEditor";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Document } from "@/lib/document/documentTypes";
+import { SubmissionStatus } from "@/lib/submission/submissionTypes";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { SubmissionStatus } from "@/lib/submission/submissionTypes";
-import Link from "next/link";
 
 const DocumentViewer = dynamic(
   () => import("@/components/documents/view/DocumentViewer"),
   { ssr: false, loading: () => <p>Loading Viewer...</p> }
 );
 
-interface StudentAssignmentViewProps {
-  assignmentId: string;
-}
-
 export default function StudentAssignmentView({
   assignmentId,
-}: StudentAssignmentViewProps) {
+}: {
+  assignmentId: string;
+}) {
+  const router = useRouter();
+
   const {
-    data: assignment,
-    isLoading: isLoadingAssignment,
-    isError: isErrorAssignment,
-  } = useGetAssignmentForStudentQuery(assignmentId);
+    data: submission,
+    isLoading: isLoadingSubmission,
+    isError,
+  } = useFindOrCreateSubmissionQuery(assignmentId);
 
-  const { data: submissions } = useGetSubmissionsForStudentQuery({});
+  const [createEditableDoc, { isLoading: isCreatingCopy }] =
+    useCreateEditableDocumentMutation();
+  const [updateDocument] = useUpdateDocumentMutation();
+  const [saveDraft, { isLoading: isSavingDraft }] = useSaveDraftMutation();
+  const [submitWork, { isLoading: isSubmitting }] = useSubmitWorkMutation();
 
-  const thisSubmission = submissions?.find(
-    (s) => s.assignment.id === assignmentId
-  );
+  const [studentDoc, setStudentDoc] = useState<Document | null>(null);
+  const [isConfirmingSubmit, setIsConfirmingSubmit] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
-  if (isLoadingAssignment) {
+  useEffect(() => {
+    if (submission) {
+      if (submission.document) {
+        setStudentDoc(submission.document);
+      } else if (submission.assignment.document && !studentDoc) {
+        const createCopy = async () => {
+          try {
+            toast.info("Preparing your personal worksheet...");
+            const newDocResult = await createEditableDoc({
+              name: `Submission for: ${submission.assignment.title}`,
+              content: submission.assignment.document.editableContent,
+            }).unwrap();
+
+            await saveDraft({
+              submissionId: submission.id,
+              data: { documentId: newDocResult.data.document.id },
+            }).unwrap();
+
+            setStudentDoc(newDocResult.data.document);
+            toast.success("Your worksheet is ready.");
+          } catch (err) {
+            toast.error("Failed to create a copy of the assignment worksheet.");
+          }
+        };
+        createCopy();
+      }
+    }
+  }, [submission, createEditableDoc, saveDraft, studentDoc]);
+
+  const handleSaveDraft = async () => {
+    if (!studentDoc || !submission) return;
+
+    try {
+      await updateDocument({
+        documentId: studentDoc.id,
+        data: {
+          name: studentDoc.name,
+          content: studentDoc.editableContent,
+        },
+      }).unwrap();
+
+      await saveDraft({
+        submissionId: submission.id,
+        data: { documentId: studentDoc.id },
+      }).unwrap();
+
+      toast.success("Your draft has been saved!");
+      setIsDirty(false);
+    } catch (err: any) {
+      console.error("Error saving draft:", err);
+      toast.error(err.data?.message || "Failed to save draft.");
+    }
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!studentDoc || !submission) return;
+    setIsConfirmingSubmit(false);
+
+    const promise = submitWork({
+      submissionId: submission.id,
+      data: { documentId: studentDoc.id },
+    }).unwrap();
+
+    toast.promise(promise, {
+      loading: "Submitting assignment...",
+      success: () => {
+        router.push(
+          `/courses/${submission?.assignment?.courseId}/student-view`
+        );
+        return "Assignment submitted successfully!";
+      },
+      error: "Failed to submit assignment.",
+    });
+  };
+
+  const isLoading = isLoadingSubmission || isCreatingCopy;
+
+  if (isLoading) {
     return (
       <div className="flex justify-center pt-10">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -60,7 +155,7 @@ export default function StudentAssignmentView({
     );
   }
 
-  if (isErrorAssignment || !assignment) {
+  if (isError || !submission) {
     return (
       <p className="text-destructive">
         Could not load assignment. You may not have access.
@@ -68,39 +163,77 @@ export default function StudentAssignmentView({
     );
   }
 
-  const getStatusMessage = () => {
-    if (!thisSubmission || thisSubmission.status === SubmissionStatus.PENDING) {
-      return "You have not submitted this assignment yet.";
-    }
-    if (thisSubmission.status === SubmissionStatus.SUBMITTED) {
-      return `Submitted on ${new Date(
-        thisSubmission.submittedAt
-      ).toLocaleDateString()}`;
-    }
-    if (thisSubmission.status === SubmissionStatus.GRADED) {
-      return `Graded on ${new Date(
-        thisSubmission.correction!.correctedAt
-      ).toLocaleDateString()}`;
-    }
-    return "";
-  };
+  const { assignment } = submission;
+  const teacherDocument = assignment.document;
+  const isSubmittedOrGraded =
+    submission.status === SubmissionStatus.SUBMITTED ||
+    submission.status === SubmissionStatus.GRADED;
 
   return (
-    <div className="flex flex-col h-full">
-      <PageHeader>
-        <div className="flex flex-col gap-2">
-          <PageHeaderHeading>{assignment.title}</PageHeaderHeading>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>
-              Due:{" "}
-              {assignment.dueDate
-                ? new Date(assignment.dueDate).toLocaleString()
-                : "No due date"}
-            </span>
+    <>
+      <AlertDialog
+        open={isConfirmingSubmit}
+        onOpenChange={setIsConfirmingSubmit}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Submit Your Assignment?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Once you submit, you will not be able to make changes. Are you
+            ready?
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleFinalSubmit}>
+              Yes, Submit Now
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="flex flex-col h-full">
+        <PageHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <PageHeaderHeading>{assignment.title}</PageHeaderHeading>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                <Clock className="h-4 w-4" />
+                <span>
+                  Due:{" "}
+                  {assignment.dueDate
+                    ? new Date(assignment.dueDate).toLocaleString()
+                    : "No due date"}
+                </span>
+              </div>
+            </div>
+            {!isSubmittedOrGraded && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  disabled={isSavingDraft || !isDirty}
+                >
+                  {isSavingDraft ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
+                  Save Draft
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={() => setIsConfirmingSubmit(true)}
+                  disabled={isSubmitting}
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Submit Assignment
+                </Button>
+              </div>
+            )}
           </div>
           {assignment.instructions && (
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion type="single" collapsible className="w-full mt-4">
               <AccordionItem value="item-1">
                 <AccordionTrigger>
                   <Info className="mr-2 h-4 w-4" />
@@ -114,52 +247,74 @@ export default function StudentAssignmentView({
               </AccordionItem>
             </Accordion>
           )}
-        </div>
-      </PageHeader>
+        </PageHeader>
 
-      <div className="grid gap-8 md:grid-cols-3 mt-4">
-        <div className="md:col-span-2">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Assignment Worksheet</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[60vh]">
-              <DocumentViewer
-                documentUrl={assignment.document.originalFileUrl}
-                editableContent={assignment.document.editableContent}
+        <Tabs
+          defaultValue="your-worksheet"
+          className="flex-1 flex flex-col mt-4"
+        >
+          <TabsList>
+            <TabsTrigger value="your-worksheet">
+              <Edit className="mr-2 h-4 w-4" /> Your Worksheet
+            </TabsTrigger>
+            <TabsTrigger value="teacher-worksheet">
+              <FileScan className="mr-2 h-4 w-4" /> Teacher's Worksheet
+            </TabsTrigger>
+            {teacherDocument.originalFileUrl && (
+              <TabsTrigger value="original-scan">
+                <FileScan className="mr-2 h-4 w-4" /> Original Scan
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          <TabsContent
+            value="your-worksheet"
+            className="flex-1 mt-2 border rounded-lg overflow-hidden"
+          >
+            {studentDoc ? (
+              <TiptapEditor
+                key={studentDoc.id}
+                initialContent={studentDoc.editableContent}
+                onUpdate={(content) => {
+                  setStudentDoc({
+                    ...studentDoc,
+                    editableContent: JSON.parse(content),
+                  });
+                  setIsDirty(true);
+                }}
+                editable={!isSubmittedOrGraded}
               />
-            </CardContent>
-          </Card>
-        </div>
-        <div className="md:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Submission</CardTitle>
-              <CardDescription>{getStatusMessage()}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {thisSubmission?.status === SubmissionStatus.GRADED ? (
-                <div className="space-y-4">
-                  <h4 className="font-semibold">
-                    Grade: {thisSubmission.correction?.grade || "Not Graded"}
-                  </h4>
-                  <p className="text-sm prose dark:prose-invert">
-                    {thisSubmission.correction?.comments}
-                  </p>
-                </div>
-              ) : (
-                <Button size="lg" className="w-full" asChild>
-                  <Link href={`/assignments/submit/${thisSubmission?.id}`}>
-                    {thisSubmission?.status === SubmissionStatus.PENDING
-                      ? "Start Assignment"
-                      : "View / Edit Submission"}
-                  </Link>
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <p className="ml-4">Preparing your personal worksheet...</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent
+            value="teacher-worksheet"
+            className="flex-1 mt-2 border rounded-lg overflow-hidden"
+          >
+            <DocumentViewer
+              documentUrl={null}
+              editableContent={teacherDocument.editableContent}
+            />
+          </TabsContent>
+
+          {teacherDocument.originalFileUrl && (
+            <TabsContent
+              value="original-scan"
+              className="flex-1 mt-2 border rounded-lg overflow-hidden"
+            >
+              <DocumentViewer
+                documentUrl={teacherDocument.originalFileUrl}
+                editableContent={null}
+              />
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
-    </div>
+    </>
   );
 }
