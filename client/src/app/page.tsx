@@ -1,5 +1,10 @@
-//src/app/page.tsx
+import Home from "@/components/home/Home";
+
 function page() {
-  return <div>page</div>;
+  return (
+    <div>
+      <Home />
+    </div>
+  );
 }
 export default page;

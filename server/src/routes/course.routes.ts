@@ -1,3 +1,5 @@
+//SRC/routes/course.routes.ts
+
 import { Router } from "express";
 import { courseController } from "../features/course/course.controller";
 import { verifyToken, verifyAdmin } from "../middleware/auth.middleware";
