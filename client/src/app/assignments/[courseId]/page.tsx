@@ -1,3 +1,5 @@
+//src/app/assignments/[courseId]/page.tsx
+
 "use client";
 
 import { useSession } from "next-auth/react";

@@ -1,3 +1,5 @@
+//src/components/teacher/TeacherCoursesForAssignments.tsx
+
 "use client";
 import { useGetMyCoursesQuery } from "@/lib/course/courseApiSlice";
 import { Loader2 } from "lucide-react";

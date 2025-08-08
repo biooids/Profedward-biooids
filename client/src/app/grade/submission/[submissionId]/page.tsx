@@ -1,3 +1,5 @@
+//src/app/grade/submission/[submissionId]/page.tsx
+
 import GradingWorkspace from "@/components/teacher/GradingWorkspace";
 
 interface PageProps {
