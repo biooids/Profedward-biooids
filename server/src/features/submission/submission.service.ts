@@ -9,14 +9,27 @@ import {
 import { Prisma, SubmissionStatus } from "prisma/generated/prisma";
 
 export class SubmissionService {
+  /**
+   *
+   * @param teacherId The ID of the teacher requesting the submissions
+   * @param query The query parameters
+   * @returns An array of submissions
+   */
+
   public async getSubmissionsForTeacher(
     teacherId: string,
     query: GetSubmissionsQueryDto
   ) {
+    const assignmentWhere: Prisma.AssignmentWhereInput = {
+      authorId: teacherId,
+    };
+
+    if (query.courseId) {
+      assignmentWhere.courseId = query.courseId;
+    }
+
     const where: Prisma.SubmissionWhereInput = {
-      assignment: {
-        authorId: teacherId,
-      },
+      assignment: assignmentWhere,
     };
 
     if (query.status) {
@@ -101,14 +114,23 @@ export class SubmissionService {
       return { newCorrection, updatedSubmission };
     });
   }
-
   public async getSubmissionsForStudent(
     studentId: string,
     query: GetSubmissionsQueryDto
   ) {
+    // --- THIS IS THE FIX ---
+    // Start with the base `where` clause
     const where: Prisma.SubmissionWhereInput = {
       studentId: studentId,
     };
+
+    // Conditionally add the courseId filter if it exists
+    if (query.courseId) {
+      where.assignment = {
+        courseId: query.courseId,
+      };
+    }
+
     if (query.status) {
       where.status = query.status;
     }

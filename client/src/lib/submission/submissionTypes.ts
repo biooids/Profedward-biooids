@@ -58,4 +58,5 @@ export interface SaveDraftDto {
 // Common types (remains the same)
 export interface GetSubmissionsQueryDto {
   status?: SubmissionStatus;
+  courseId?: string;
 }

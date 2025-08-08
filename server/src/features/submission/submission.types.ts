@@ -4,6 +4,7 @@ import { SubmissionStatus } from "prisma/generated/prisma";
 // For filtering submissions by status
 export interface GetSubmissionsQueryDto {
   status?: SubmissionStatus;
+  courseId?: string;
 }
 
 // For a teacher grading a submission

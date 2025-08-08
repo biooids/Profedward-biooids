@@ -3,8 +3,8 @@
 
 import { useSession } from "next-auth/react";
 import { UserRole } from "@/lib/user/userTypes";
-import TeacherAssignmentsDashboard from "@/components/teacher/AssignmentsDashboard";
-import StudentAssignmentsDashboard from "@/components/student/StudentAssignmentsDashboard";
+import TeacherCoursesForAssignments from "@/components/teacher/TeacherCoursesForAssignments";
+import StudentCoursesForAssignments from "@/components/student/StudentCoursesForAssignments";
 import {
   PageHeader,
   PageHeaderDescription,
@@ -12,7 +12,7 @@ import {
 } from "@/components/layouts/PageHeader";
 import { Loader2 } from "lucide-react";
 
-export default function AssignmentsPage() {
+export default function AssignmentsHubPage() {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
@@ -23,22 +23,19 @@ export default function AssignmentsPage() {
     );
   }
 
-  const isTeacher = session?.user?.userRole === UserRole.TEACHER;
-  const isStudent = session?.user?.userRole === UserRole.STUDENT;
+  const userRole = session?.user?.userRole;
 
   return (
     <>
       <PageHeader>
         <PageHeaderHeading>Assignments</PageHeaderHeading>
         <PageHeaderDescription>
-          {isTeacher
-            ? "Review and grade student submissions here."
-            : "Track your pending, submitted, and graded assignments."}
+          Select a course to view its assignments and submissions.
         </PageHeaderDescription>
       </PageHeader>
 
-      {isTeacher && <TeacherAssignmentsDashboard />}
-      {isStudent && <StudentAssignmentsDashboard />}
+      {userRole === UserRole.TEACHER && <TeacherCoursesForAssignments />}
+      {userRole === UserRole.STUDENT && <StudentCoursesForAssignments />}
     </>
   );
 }

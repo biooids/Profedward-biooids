@@ -1,4 +1,5 @@
 //src/components/teacher/AssignmentsDashboard.tsx
+
 "use client";
 
 import { useMemo } from "react";
@@ -7,13 +8,26 @@ import TeacherSubmissionList from "./SubmissionList";
 import { SubmissionStatus } from "@/lib/submission/submissionTypes";
 import { useGetTeacherSubmissionsQuery } from "@/lib/submission/submissionApiSlice";
 import { Loader2 } from "lucide-react";
+import {
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderHeading,
+} from "@/components/layouts/PageHeader";
 
-export default function AssignmentsDashboard() {
-  // 1. Fetch ALL submissions for the teacher just once.
-  const { data: allSubmissions = [], isLoading } =
-    useGetTeacherSubmissionsQuery({});
+export default function AssignmentsDashboard({
+  courseId,
+}: {
+  courseId: string;
+}) {
+  // Fetch submissions ONLY for this specific course
+  const {
+    data: allSubmissions = [],
+    isLoading,
+    isError,
+  } = useGetTeacherSubmissionsQuery({
+    courseId,
+  });
 
-  // 2. Filter the single list into categories using useMemo for efficiency.
   const readyToGrade = useMemo(
     () => allSubmissions.filter((s) => s.status === SubmissionStatus.SUBMITTED),
     [allSubmissions]
@@ -35,29 +49,45 @@ export default function AssignmentsDashboard() {
     );
   }
 
+  if (isError) {
+    return (
+      <p className="text-destructive">
+        Failed to load submissions for this course.
+      </p>
+    );
+  }
+
   return (
-    <Tabs defaultValue="ready_to_grade">
-      <TabsList>
-        <TabsTrigger value="ready_to_grade">
-          Ready to Grade ({readyToGrade.length})
-        </TabsTrigger>
-        <TabsTrigger value="graded">Graded ({graded.length})</TabsTrigger>
-        <TabsTrigger value="not_submitted">
-          Not Submitted ({notSubmitted.length})
-        </TabsTrigger>
-      </TabsList>
+    <>
+      <PageHeader>
+        <PageHeaderHeading>Submissions</PageHeaderHeading>
+        <PageHeaderDescription>
+          Review student submissions for this course.
+        </PageHeaderDescription>
+      </PageHeader>
+      <Tabs defaultValue="ready_to_grade">
+        <TabsList>
+          <TabsTrigger value="ready_to_grade">
+            Ready to Grade ({readyToGrade.length})
+          </TabsTrigger>
+          <TabsTrigger value="graded">Graded ({graded.length})</TabsTrigger>
+          <TabsTrigger value="not_submitted">
+            Not Submitted ({notSubmitted.length})
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="ready_to_grade" className="mt-4">
-        <TeacherSubmissionList submissions={readyToGrade} />
-      </TabsContent>
+        <TabsContent value="ready_to_grade" className="mt-4">
+          <TeacherSubmissionList submissions={readyToGrade} />
+        </TabsContent>
 
-      <TabsContent value="graded" className="mt-4">
-        <TeacherSubmissionList submissions={graded} />
-      </TabsContent>
+        <TabsContent value="graded" className="mt-4">
+          <TeacherSubmissionList submissions={graded} />
+        </TabsContent>
 
-      <TabsContent value="not_submitted" className="mt-4">
-        <TeacherSubmissionList submissions={notSubmitted} />
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="not_submitted" className="mt-4">
+          <TeacherSubmissionList submissions={notSubmitted} />
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }
