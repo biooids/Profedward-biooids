@@ -1,3 +1,5 @@
+//src/types/next-auth.d.ts
+
 import "next-auth";
 import "next-auth/jwt";
 // Import both role enums
@@ -25,14 +27,13 @@ declare module "next-auth" {
     user: {
       id: string;
       username: string;
-      name: string | null;
+      displayName: string | null;
+      profileImage: string | null;
       email: string | null;
-      image: string | null;
       systemRole: SystemRole;
       userRole: UserRole;
     };
 
-    // Expose the access token and any errors to the client
     backendAccessToken?: string;
     error?: string;
   }
