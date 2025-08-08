@@ -1,15 +1,19 @@
-//src/components/teacher/GradingWorkspace.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   useGetSubmissionForGradingQuery,
   useGradeSubmissionMutation,
+  useSaveGradingDraftMutation, // --- NEW: Import the new mutation hook ---
 } from "@/lib/submission/submissionApiSlice";
-import { useCreateEditableDocumentMutation } from "@/lib/document/documentApiSlice";
+import {
+  useCreateEditableDocumentMutation,
+  useUpdateDocumentMutation,
+} from "@/lib/document/documentApiSlice";
 import { Loader2, Save, Send, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,14 +45,23 @@ export default function GradingWorkspace({
   submissionId: string;
 }) {
   const router = useRouter();
+  const { status: authStatus } = useSession();
+
   const {
     data: submission,
     isLoading,
     isError,
-  } = useGetSubmissionForGradingQuery(submissionId);
+  } = useGetSubmissionForGradingQuery(submissionId, {
+    skip: authStatus !== "authenticated",
+    refetchOnMountOrArgChange: true,
+  });
 
   const [createDocument, { isLoading: isCreatingCopy }] =
     useCreateEditableDocumentMutation();
+  const [updateDocument] = useUpdateDocumentMutation();
+  // --- NEW: Instantiate the new mutation hook ---
+  const [saveGradingDraft, { isLoading: isSavingDraft }] =
+    useSaveGradingDraftMutation();
   const [gradeSubmission, { isLoading: isGrading }] =
     useGradeSubmissionMutation();
 
@@ -56,24 +69,31 @@ export default function GradingWorkspace({
     useState<DocumentType | null>(null);
   const [grade, setGrade] = useState("");
   const [comments, setComments] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
+  const editorContentRef = useRef<any>(null);
 
-  // This effect prepares the teacher's feedback document
   useEffect(() => {
     if (submission) {
+      console.log("✅ SUBMISSION DATA LOADED:", submission);
+
       if (submission.correction?.document) {
-        // If already graded, load the existing feedback document
+        console.log("Found existing correction, populating fields.");
         setTeacherFeedbackDoc(submission.correction.document);
+        editorContentRef.current =
+          submission.correction.document.editableContent;
         setGrade(submission.correction.grade || "");
         setComments(submission.correction.comments || "");
       } else if (submission.document && !teacherFeedbackDoc) {
-        // If grading for the first time, create a copy of the student's work to mark up
         const createMarkupCopy = async () => {
           try {
+            console.log("No correction found. Creating a new markup copy.");
             const result = await createDocument({
               name: `Correction for: ${submission.document!.name}`,
               content: submission.document!.editableContent,
             }).unwrap();
-            setTeacherFeedbackDoc(result.data.document);
+            const finalDoc = result.data.document;
+            setTeacherFeedbackDoc(finalDoc);
+            editorContentRef.current = finalDoc.editableContent;
           } catch (err) {
             toast.error("Failed to create feedback document.");
           }
@@ -81,30 +101,92 @@ export default function GradingWorkspace({
         createMarkupCopy();
       }
     }
-  }, [submission, createDocument, teacherFeedbackDoc]);
+  }, [submission, createDocument]);
+
+  // --- NEW: Updated save handler to save everything ---
+  const handleSaveForLater = async () => {
+    if (!teacherFeedbackDoc) return;
+
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        // Step 1: Save the markup document changes
+        const docPayload = {
+          documentId: teacherFeedbackDoc.id,
+          data: {
+            name: teacherFeedbackDoc.name,
+            content: editorContentRef.current,
+          },
+        };
+        console.log("💾 SAVING MARKUP DOCUMENT. PAYLOAD:", docPayload);
+        await updateDocument(docPayload).unwrap();
+
+        // Step 2: Save the grade and comments to the Correction record
+        const gradePayload = {
+          submissionId,
+          data: {
+            documentId: teacherFeedbackDoc.id,
+            grade: grade,
+            comments: comments,
+          },
+        };
+        console.log("💾 SAVING GRADE/COMMENTS. PAYLOAD:", gradePayload);
+        await saveGradingDraft(gradePayload).unwrap();
+
+        resolve("Your grading progress has been saved.");
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    toast.promise(promise, {
+      loading: "Saving progress...",
+      success: (message) => {
+        setIsDirty(false);
+        return message as string;
+      },
+      error: "Failed to save progress.",
+    });
+  };
 
   const handlePublishGrade = async () => {
     if (!teacherFeedbackDoc) return;
-    const promise = gradeSubmission({
-      submissionId,
-      data: {
-        grade,
-        comments,
-        documentId: teacherFeedbackDoc.id,
-      },
-    }).unwrap();
+
+    console.log("🚀 PUBLISHING GRADE. Current state:", { grade, comments });
+
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        if (isDirty) {
+          // This now saves all draft progress before publishing
+          await handleSaveForLater();
+        }
+
+        const gradePayload = {
+          submissionId,
+          data: {
+            grade,
+            comments,
+            documentId: teacherFeedbackDoc.id,
+          },
+        };
+        console.log("Publishing grade with payload:", gradePayload);
+        await gradeSubmission(gradePayload).unwrap();
+        resolve("Grade published successfully!");
+      } catch (err) {
+        reject(err);
+      }
+    });
 
     toast.promise(promise, {
       loading: "Publishing grade...",
-      success: () => {
+      success: (message) => {
         router.push("/assignments");
-        return "Grade published successfully!";
+        return message as string;
       },
       error: "Failed to publish grade.",
     });
   };
 
-  const isLoadingUI = isLoading || isCreatingCopy;
+  const isLoadingUI = isLoading || isCreatingCopy || authStatus === "loading";
 
   if (isLoadingUI) {
     return (
@@ -117,13 +199,16 @@ export default function GradingWorkspace({
     return (
       <div className="text-center text-destructive">
         <AlertTriangle className="mx-auto h-8 w-8" />
-        Submission not found.
+        <p className="mt-2">
+          Submission not found or you do not have permission to view it.
+        </p>
       </div>
     );
   }
 
   const studentDocument = submission.document;
   const isGraded = submission.status === "GRADED";
+  const isPublishing = isSavingDraft || isGrading;
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
@@ -136,14 +221,32 @@ export default function GradingWorkspace({
           </p>
         </div>
         {!isGraded && (
-          <Button size="lg" onClick={handlePublishGrade} disabled={isGrading}>
-            {isGrading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="mr-2 h-4 w-4" />
-            )}
-            Publish Grade
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleSaveForLater}
+              disabled={isSavingDraft || !isDirty}
+            >
+              {isSavingDraft ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Save for Later
+            </Button>
+            <Button
+              size="lg"
+              onClick={handlePublishGrade}
+              disabled={isPublishing}
+            >
+              {isPublishing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="mr-2 h-4 w-4" />
+              )}
+              Publish Grade
+            </Button>
+          </div>
         )}
       </header>
 
@@ -182,7 +285,10 @@ export default function GradingWorkspace({
                 <Input
                   id="grade"
                   value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
+                  onChange={(e) => {
+                    setGrade(e.target.value);
+                    setIsDirty(true);
+                  }}
                   placeholder="e.g., A+ or 95/100"
                   readOnly={isGraded}
                 />
@@ -191,7 +297,10 @@ export default function GradingWorkspace({
                 <Label>Overall Comments</Label>
                 <Textarea
                   value={comments}
-                  onChange={(e) => setComments(e.target.value)}
+                  onChange={(e) => {
+                    setComments(e.target.value);
+                    setIsDirty(true);
+                  }}
                   placeholder="Provide summary feedback..."
                   readOnly={isGraded}
                 />
@@ -205,12 +314,10 @@ export default function GradingWorkspace({
                 <TiptapEditor
                   key={teacherFeedbackDoc.id}
                   initialContent={teacherFeedbackDoc.editableContent}
-                  onUpdate={(content) =>
-                    setTeacherFeedbackDoc({
-                      ...teacherFeedbackDoc,
-                      editableContent: JSON.parse(content),
-                    })
-                  }
+                  onUpdate={(content) => {
+                    editorContentRef.current = JSON.parse(content);
+                    setIsDirty(true);
+                  }}
                   editable={!isGraded}
                 />
               ) : (

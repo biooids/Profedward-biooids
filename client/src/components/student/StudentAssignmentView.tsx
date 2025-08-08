@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -46,6 +46,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { useSession } from "next-auth/react";
 
 const DocumentViewer = dynamic(
   () => import("@/components/documents/view/DocumentViewer"),
@@ -65,12 +66,15 @@ export default function StudentAssignmentView({
   assignmentId: string;
 }) {
   const router = useRouter();
+  const { status: authStatus } = useSession();
 
   const {
     data: submission,
     isLoading: isLoadingSubmission,
     isError,
-  } = useFindOrCreateSubmissionQuery(assignmentId);
+  } = useFindOrCreateSubmissionQuery(assignmentId, {
+    skip: authStatus !== "authenticated",
+  });
 
   const [createEditableDoc, { isLoading: isCreatingCopy }] =
     useCreateEditableDocumentMutation();
@@ -82,25 +86,38 @@ export default function StudentAssignmentView({
   const [isConfirmingSubmit, setIsConfirmingSubmit] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
+  const editorContentRef = useRef<any>(null);
+
   useEffect(() => {
     if (submission) {
-      if (submission.document) {
+      // --- LOGGING FETCHED DATA ---
+      console.log("✅ FETCHED DATA: Full submission object:", submission);
+
+      if (submission.document && !studentDoc) {
+        console.log(
+          "Found existing document on submission, setting it in state."
+        );
         setStudentDoc(submission.document);
+        editorContentRef.current = submission.document.editableContent;
       } else if (submission.assignment.document && !studentDoc) {
         const createCopy = async () => {
           try {
             toast.info("Preparing your personal worksheet...");
+            console.log("No student doc found, creating a new copy.");
             const newDocResult = await createEditableDoc({
               name: `Submission for: ${submission.assignment.title}`,
               content: submission.assignment.document.editableContent,
             }).unwrap();
 
+            const finalDoc = newDocResult.data.document;
+
             await saveDraft({
               submissionId: submission.id,
-              data: { documentId: newDocResult.data.document.id },
+              data: { documentId: finalDoc.id },
             }).unwrap();
 
-            setStudentDoc(newDocResult.data.document);
+            setStudentDoc(finalDoc);
+            editorContentRef.current = finalDoc.editableContent;
             toast.success("Your worksheet is ready.");
           } catch (err) {
             toast.error("Failed to create a copy of the assignment worksheet.");
@@ -109,40 +126,92 @@ export default function StudentAssignmentView({
         createCopy();
       }
     }
-  }, [submission, createEditableDoc, saveDraft, studentDoc]);
+  }, [submission, createEditableDoc, saveDraft, studentDoc]); // Added studentDoc to dependency array
 
   const handleSaveDraft = async () => {
-    if (!studentDoc || !submission) return;
-    try {
-      await updateDocument({
-        documentId: studentDoc.id,
-        data: { name: studentDoc.name, content: studentDoc.editableContent },
-      }).unwrap();
-      await saveDraft({
-        submissionId: submission.id,
-        data: { documentId: studentDoc.id },
-      }).unwrap();
-      toast.success("Your draft has been saved!");
-      setIsDirty(false);
-    } catch (err: any) {
-      toast.error(err.data?.message || "Failed to save draft.");
+    // --- LOGGING DATA ON SAVE ---
+    console.log("💾 SAVE DRAFT TRIGGERED");
+    console.log("Content to be saved (from ref):", editorContentRef.current);
+    console.log("Current submission data:", submission);
+
+    if (!studentDoc || !submission) {
+      console.error(
+        "❌ Cannot save draft: Missing student document or submission data."
+      );
+      return;
     }
+
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        const payload = {
+          documentId: studentDoc.id,
+          data: {
+            name: studentDoc.name,
+            content: editorContentRef.current,
+          },
+        };
+        console.log("API PAYLOAD for updateDocument:", payload);
+
+        // Step 1: Save the actual content changes to the document
+        await updateDocument(payload).unwrap();
+
+        // Step 2: Update the submission status (this might just update a timestamp)
+        await saveDraft({
+          submissionId: submission.id,
+          data: { documentId: studentDoc.id },
+        }).unwrap();
+
+        resolve("Draft saved successfully!");
+      } catch (err) {
+        console.error("❌ Error during save draft process:", err);
+        reject(err);
+      }
+    });
+
+    toast.promise(promise, {
+      loading: "Saving your draft...",
+      success: (message) => {
+        setIsDirty(false); // Reset the dirty flag only on success
+        return message as string;
+      },
+      error: "Failed to save your draft. Please try again.",
+    });
   };
 
   const handleFinalSubmit = async () => {
     if (!studentDoc || !submission) return;
     setIsConfirmingSubmit(false);
-    const promise = submitWork({
-      submissionId: submission.id,
-      data: { documentId: studentDoc.id },
-    }).unwrap();
+
+    const promise = new Promise(async (resolve, reject) => {
+      try {
+        if (isDirty) {
+          const payload = {
+            documentId: studentDoc.id,
+            data: { content: editorContentRef.current },
+          };
+          console.log(
+            "SUBMIT: Document is dirty. Saving this payload before submitting:",
+            payload
+          );
+          await updateDocument(payload).unwrap();
+        }
+
+        await submitWork({
+          submissionId: submission.id,
+          data: { documentId: studentDoc.id },
+        }).unwrap();
+
+        resolve("Assignment submitted successfully!");
+      } catch (err) {
+        reject(err);
+      }
+    });
+
     toast.promise(promise, {
       loading: "Submitting assignment...",
-      success: () => {
-        router.push(
-          `/courses/${submission?.assignment?.courseId}/student-view`
-        );
-        return "Assignment submitted successfully!";
+      success: (message) => {
+        router.push(`/assignments/${submission?.assignment?.courseId}`);
+        return message as string;
       },
       error: "Failed to submit assignment.",
     });
@@ -307,11 +376,10 @@ export default function StudentAssignmentView({
                     key={studentDoc.id}
                     initialContent={studentDoc.editableContent}
                     onUpdate={(content) => {
-                      setStudentDoc({
-                        ...studentDoc,
-                        editableContent: JSON.parse(content),
-                      });
+                      editorContentRef.current = JSON.parse(content);
                       setIsDirty(true);
+                      // Note: We don't need to call setStudentDoc here on every keystroke,
+                      // as it can cause performance issues. The ref is sufficient for saving.
                     }}
                     editable={!isSubmittedOrGraded}
                   />

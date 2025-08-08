@@ -1,3 +1,5 @@
+//src/components/home/Home.tsx
+
 "use client";
 
 import Link from "next/link";

@@ -60,3 +60,9 @@ export interface GetSubmissionsQueryDto {
   status?: SubmissionStatus;
   courseId?: string;
 }
+
+export interface SaveGradingDraftDto {
+  grade?: string;
+  comments?: string;
+  documentId: string;
+}

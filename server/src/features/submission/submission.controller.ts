@@ -7,6 +7,7 @@ import {
   GradeSubmissionDto,
   SubmitWorkDto,
   SaveDraftDto,
+  SaveGradingDraftDto,
 } from "./submission.types";
 
 class SubmissionController {
@@ -115,6 +116,19 @@ class SubmissionController {
       res.status(200).json({ status: "success", data: submission });
     }
   );
+
+  saveGradingDraft = asyncHandler(async (req: Request, res: Response) => {
+    const correctorId = req.user!.id;
+    const { submissionId } = req.params;
+    const data = req.body as SaveGradingDraftDto; // Use the new DTO
+
+    const correction = await submissionService.saveGradingDraft(
+      submissionId,
+      correctorId,
+      data
+    );
+    res.status(200).json({ status: "success", data: correction });
+  });
 }
 
 export const submissionController = new SubmissionController();

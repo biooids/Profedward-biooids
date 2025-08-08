@@ -9,6 +9,7 @@ import {
   GradeSubmissionDto,
   SubmitWorkDto,
   SaveDraftDto,
+  SaveGradingDraftDto,
 } from "./submissionTypes";
 
 export const submissionApiSlice = createApi({
@@ -103,6 +104,20 @@ export const submissionApiSlice = createApi({
       transformResponse: (response: { data: StudentSubmission }) =>
         response.data,
     }),
+
+    saveGradingDraft: builder.mutation<
+      void,
+      { submissionId: string; data: SaveGradingDraftDto }
+    >({
+      query: ({ submissionId, data }) => ({
+        url: `/submissions/${submissionId}/save-grade`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { submissionId }) => [
+        { type: "StudentSubmission", id: submissionId },
+      ],
+    }),
   }),
 });
 
@@ -116,4 +131,5 @@ export const {
   useSaveDraftMutation,
   useGetSubmissionForGradingQuery,
   useGetGradedSubmissionQuery,
+  useSaveGradingDraftMutation,
 } = submissionApiSlice;

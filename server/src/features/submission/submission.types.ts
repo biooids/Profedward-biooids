@@ -25,3 +25,9 @@ export interface SaveDraftDto {
   documentId: string;
   notes?: string;
 }
+
+export interface SaveGradingDraftDto {
+  grade?: string;
+  comments?: string;
+  documentId: string;
+}

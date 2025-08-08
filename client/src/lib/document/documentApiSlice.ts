@@ -120,5 +120,5 @@ export const {
   useUploadDocumentMutation,
   useUpdateDocumentMutation,
   useDeleteDocumentMutation,
-  useExportDocumentMutation, // Ensure this hook is exported
+  useExportDocumentMutation,
 } = documentApiSlice;

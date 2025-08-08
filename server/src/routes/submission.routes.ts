@@ -9,6 +9,11 @@ router.use(verifyToken);
 
 // --- Teacher routes ---
 router.get("/teacher", submissionController.getSubmissionsForTeacher);
+router.patch(
+  "/:submissionId/save-grade",
+  submissionController.saveGradingDraft
+);
+
 router.post("/:submissionId/correct", submissionController.gradeSubmission);
 router.get(
   "/:submissionId/teacher",

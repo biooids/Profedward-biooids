@@ -110,16 +110,22 @@ class DocumentController {
 
   handleUpdateDocument = asyncHandler(async (req: Request, res: Response) => {
     const { documentId } = req.params;
-    const { name } = req.body;
+    const { name, content } = req.body;
     const userId = req.user!.id;
-    if (!name) {
-      throw createHttpError(400, "Document name is required for update.");
+
+    if (!name && !content) {
+      throw createHttpError(
+        400,
+        "Update failed: Must provide a new name or new content."
+      );
     }
+
     const updatedDocument = await documentService.updateDocument(
       userId,
       documentId,
-      { name }
+      { name, content } // Pass both fields
     );
+
     res.status(200).json({
       status: "success",
       message: "Document updated successfully.",

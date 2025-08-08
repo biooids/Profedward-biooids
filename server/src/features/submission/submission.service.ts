@@ -5,6 +5,7 @@ import {
   GetSubmissionsQueryDto,
   SubmitWorkDto,
   SaveDraftDto,
+  SaveGradingDraftDto,
 } from "./submission.types";
 import { Prisma, SubmissionStatus } from "prisma/generated/prisma";
 
@@ -61,18 +62,11 @@ export class SubmissionService {
     correctorId: string,
     data: GradeSubmissionDto
   ) {
-    // 1. Find the submission and include course teachers for permission check
     const submission = await prisma.submission.findUnique({
       where: { id: submissionId },
       include: {
         assignment: {
-          include: {
-            course: {
-              include: {
-                teachers: true,
-              },
-            },
-          },
+          include: { course: { include: { teachers: true } } },
         },
       },
     });
@@ -81,7 +75,6 @@ export class SubmissionService {
       throw createHttpError(404, "Submission not found.");
     }
 
-    // 2. Verify that the user is a teacher for this specific course
     const isTeacher = submission.assignment.course.teachers.some(
       (teacher) => teacher.id === correctorId
     );
@@ -92,20 +85,28 @@ export class SubmissionService {
       );
     }
 
-    // 3. Use a transaction to perform both database writes at once
+    // --- THIS IS THE FIX ---
+    // Use a transaction to perform both writes safely.
     return prisma.$transaction(async (tx) => {
-      // Step A: Create the new Correction record
-      const newCorrection = await tx.correction.create({
-        data: {
+      // Step A: Use upsert to find and update the correction, or create it.
+      const newCorrection = await tx.correction.upsert({
+        where: { submissionId: submissionId },
+        // If it exists, update it with the final grade and comments.
+        update: {
           grade: data.grade ?? null,
           comments: data.comments ?? null,
+        },
+        // If it doesn't exist, create it.
+        create: {
           submission: { connect: { id: submissionId } },
           corrector: { connect: { id: correctorId } },
           document: { connect: { id: data.documentId } },
+          grade: data.grade ?? null,
+          comments: data.comments ?? null,
         },
       });
 
-      // Step B: Update the original Submission's status to GRADED
+      // Step B: Update the original Submission's status to GRADED.
       const updatedSubmission = await tx.submission.update({
         where: { id: submissionId },
         data: { status: SubmissionStatus.GRADED },
@@ -394,6 +395,38 @@ export class SubmissionService {
       );
     }
     return submission;
+  }
+
+  public async saveGradingDraft(
+    submissionId: string,
+    correctorId: string,
+    data: SaveGradingDraftDto
+  ) {
+    const submission = await prisma.submission.findFirst({
+      where: {
+        id: submissionId,
+        assignment: { course: { teachers: { some: { id: correctorId } } } },
+      },
+    });
+
+    if (!submission) {
+      throw createHttpError(404, "Submission not found or access denied.");
+    }
+
+    return prisma.correction.upsert({
+      where: { submissionId: submissionId },
+      create: {
+        submission: { connect: { id: submissionId } },
+        corrector: { connect: { id: correctorId } },
+        document: { connect: { id: data.documentId } },
+        grade: data.grade ?? null,
+        comments: data.comments ?? null,
+      },
+      update: {
+        grade: data.grade ?? null,
+        comments: data.comments ?? null,
+      },
+    });
   }
 }
 
