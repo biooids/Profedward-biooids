@@ -21,9 +21,7 @@ export default function CourseAssignmentsPage({ params }: PageProps) {
       {userRole === UserRole.TEACHER && (
         <TeacherAssignmentsDashboard courseId={params.courseId} />
       )}
-      {userRole === UserRole.STUDENT && (
-        <StudentAssignmentsDashboard courseId={params.courseId} />
-      )}
+      {userRole === UserRole.STUDENT && <StudentAssignmentsDashboard />}
     </>
   );
 }

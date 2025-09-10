@@ -6,9 +6,11 @@ import { DecodedAccessTokenPayload } from "../types/auth.types.js"; // Ensure th
 import { createHttpError } from "../utils/error.factory.js";
 import { asyncHandler } from "./asyncHandler.js";
 import { HttpError } from "../utils/HttpError.js";
-import { UserRole } from "prisma/generated/prisma";
+import { UserRole } from "../../prisma/generated/prisma";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+const DEFAULT_PROFILE_IMAGE_URL =
+  "https://res.cloudinary.com/djtww0vax/image/upload/v1747766773/xi-biooid_bstapi.jpg";
 
 export const verifyToken = asyncHandler(
   async (req: Request, _res: Response, next: NextFunction) => {
@@ -144,7 +146,7 @@ export const verifyToken = asyncHandler(
         systemRole: userFromDb.systemRole, // Authoritative from DB
         username: userFromDb.username, // Authoritative from DB
         displayName: userFromDb.displayName, // Authoritative from DB (can be null)
-        profileImage: userFromDb.profileImage, // Authoritative from DB (will be string due to default)
+        profileImage: userFromDb.profileImage ?? DEFAULT_PROFILE_IMAGE_URL, // Authoritative from DB (will be string due to default)
         userRole: userFromDb.userRole, // <-- 2. ADD THIS LINE to the user object
       };
 

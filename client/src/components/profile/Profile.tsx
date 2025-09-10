@@ -1,6 +1,8 @@
+//./src/components/profile/Profile.tsx
+
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -101,11 +103,17 @@ const ProfilePage = () => {
   });
 
   const watchedFormFields = watch();
+
+  const watchedFieldsString = useMemo(
+    () => JSON.stringify(watchedFormFields),
+    [watchedFormFields]
+  );
+
   useEffect(() => {
     if (isDirty) {
       setUiMessage(null);
     }
-  }, [JSON.stringify(watchedFormFields), isDirty]);
+  }, [watchedFieldsString, isDirty]);
 
   useEffect(() => {
     if (sessionStatus === "unauthenticated") {
@@ -113,18 +121,16 @@ const ProfilePage = () => {
     }
   }, [sessionStatus, router]);
 
+  const profileImageUrl = userProfile?.profileImage;
+
   useEffect(() => {
-    if (userProfile) {
-      reset({
-        username: userProfile.username || "",
-        displayName: userProfile.displayName || "",
-        bio: userProfile.bio || "",
-      });
-      if (!imagePreview?.startsWith("blob:")) {
-        setImagePreview(userProfile.profileImage || null);
+    setImagePreview((currentPreview) => {
+      if (currentPreview && currentPreview.startsWith("blob:")) {
+        return currentPreview;
       }
-    }
-  }, [userProfile, reset]);
+      return profileImageUrl || null;
+    });
+  }, [profileImageUrl]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>

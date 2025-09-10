@@ -2,7 +2,7 @@
 
 import prisma from "../db/prisma";
 // FIX 1: Import the Prisma namespace for type usage.
-import { Prisma } from "prisma/generated/prisma";
+import { Prisma } from "../../prisma/generated/prisma";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { PrismaVectorStore } from "@langchain/community/vectorstores/prisma";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";

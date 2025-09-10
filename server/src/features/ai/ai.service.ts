@@ -1,5 +1,5 @@
 import prisma from "../../db/prisma";
-import { Prisma } from "prisma/generated/prisma";
+import { Prisma } from "../../../prisma/generated/prisma";
 import { PrismaVectorStore } from "@langchain/community/vectorstores/prisma";
 import {
   RunnablePassthrough,

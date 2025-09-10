@@ -3,7 +3,7 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { config } from "@/config";
+import { config } from "../../../config";
 
 // Initialize the Gemini model.
 // We use a slightly higher temperature than for summarization to allow for more creative

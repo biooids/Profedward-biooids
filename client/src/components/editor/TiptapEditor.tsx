@@ -7,12 +7,11 @@ import { cn } from "@/lib/utils";
 import EditorToolbar from "./EditorToolbar";
 
 interface TiptapEditorProps {
-  // eslint-disable-next-line no-unused-vars
   onUpdate?: (content: string) => void;
-  initialContent?: any; // Can be string or JSON object
+  initialContent?: any;
   className?: string;
   hasError?: boolean;
-  editable?: boolean; // <-- 1. ADD NEW PROP for read-only mode
+  editable?: boolean;
 }
 
 export default function TiptapEditor({

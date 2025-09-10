@@ -7,7 +7,7 @@ import {
   SaveDraftDto,
   SaveGradingDraftDto,
 } from "./submission.types";
-import { Prisma, SubmissionStatus } from "prisma/generated/prisma";
+import { Prisma, SubmissionStatus } from "../../../prisma/generated/prisma";
 
 export class SubmissionService {
   /**

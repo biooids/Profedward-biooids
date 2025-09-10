@@ -1,6 +1,9 @@
+// next.config.js
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // ... your other configurations (images, etc.)
   images: {
     remotePatterns: [
       {
@@ -21,6 +24,13 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ["canvas"],
+
+  webpack: (config) => {
+    config.externals.push({
+      canvas: "commonjs canvas",
+    });
+    return config;
+  },
 };
 
 export default nextConfig;

@@ -11,6 +11,8 @@ import { HttpError } from "./HttpError.js";
 import prisma from "../db/prisma.js";
 
 // --- Load Environment Variables & Validate (Your existing code is good) ---
+const DEFAULT_PROFILE_IMAGE_URL =
+  "https://res.cloudinary.com/djtww0vax/image/upload/v1747766773/xi-biooid_bstapi.jpg";
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 const ACCESS_TOKEN_EXPIRES_IN_SECONDS_STR =
@@ -69,7 +71,7 @@ export const generateAccessToken = (user: User): string => {
     type: "access",
     username: user.username,
     displayName: user.displayName,
-    profileImage: user.profileImage,
+    profileImage: user.profileImage ?? DEFAULT_PROFILE_IMAGE_URL,
   };
 
   const options: SignOptions = {

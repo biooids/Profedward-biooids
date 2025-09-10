@@ -1,7 +1,7 @@
 import prisma from "../../db/prisma";
 import { createHttpError } from "../../utils/error.factory";
-import { UserRole } from "prisma/generated/prisma";
-import { Prisma } from "prisma/generated/prisma"; // <-- ADD THIS IMPORT
+import { UserRole } from "../../../prisma/generated/prisma";
+import { Prisma } from "../../../prisma/generated/prisma"; // <-- ADD THIS IMPORT
 
 import {
   CreateCourseDto,

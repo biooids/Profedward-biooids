@@ -74,19 +74,16 @@ export default function GradingWorkspace({
 
   useEffect(() => {
     if (submission) {
-      console.log("✅ SUBMISSION DATA LOADED:", submission);
-
       if (submission.correction?.document) {
-        console.log("Found existing correction, populating fields.");
         setTeacherFeedbackDoc(submission.correction.document);
         editorContentRef.current =
           submission.correction.document.editableContent;
         setGrade(submission.correction.grade || "");
         setComments(submission.correction.comments || "");
       } else if (submission.document && !teacherFeedbackDoc) {
+        // <-- This line reads `teacherFeedbackDoc`
         const createMarkupCopy = async () => {
           try {
-            console.log("No correction found. Creating a new markup copy.");
             const result = await createDocument({
               name: `Correction for: ${submission.document!.name}`,
               content: submission.document!.editableContent,
@@ -101,7 +98,8 @@ export default function GradingWorkspace({
         createMarkupCopy();
       }
     }
-  }, [submission, createDocument]);
+    // Add `teacherFeedbackDoc` to the dependency array to resolve the warning.
+  }, [submission, createDocument, teacherFeedbackDoc]);
 
   // --- NEW: Updated save handler to save everything ---
   const handleSaveForLater = async () => {

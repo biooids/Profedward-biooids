@@ -5,7 +5,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { createHttpError } from "../utils/error.factory.js";
 import { userService } from "../services/user.service.js"; // <-- USE THE USER SERVICE
 import { SystemRole, User } from "../../prisma/generated/prisma";
-import { uploadToCloudinary } from "@/config/cloudinary.js";
+import { uploadToCloudinary } from "../config/cloudinary.js";
 
 // --- ADD THIS HELPER FUNCTION AT THE TOP ---
 /**

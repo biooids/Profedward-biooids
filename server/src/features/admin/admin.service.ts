@@ -1,6 +1,6 @@
 import prisma from "../../db/prisma";
 import { createHttpError } from "../../utils/error.factory";
-import { User, UserRole } from "prisma/generated/prisma"; // Use @prisma/client
+import { User, UserRole } from "../../../prisma/generated/prisma"; // Use @prisma/client
 
 export class AdminService {
   /**

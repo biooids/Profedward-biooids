@@ -1,5 +1,5 @@
 //src/features/course/course.types.ts
-import { Prisma } from "prisma/generated/prisma";
+import { Prisma } from "../../../prisma/generated/prisma";
 export interface CreateCourseDto {
   academicLevelId: string;
   subjectId: string;

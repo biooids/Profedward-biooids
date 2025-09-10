@@ -1,5 +1,5 @@
 //src/features/submission/submission.types.ts
-import { SubmissionStatus } from "prisma/generated/prisma";
+import { SubmissionStatus } from "../../../prisma/generated/prisma";
 
 // For filtering submissions by status
 export interface GetSubmissionsQueryDto {

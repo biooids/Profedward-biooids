@@ -2,7 +2,7 @@
 import { Router } from "express";
 import { userController } from "../controllers/user.controller";
 import { verifyToken } from "../middleware/auth.middleware.js";
-import { uploadProfileImage } from "@/middleware/multer.config";
+import { uploadProfileImage } from "../middleware/multer.config";
 
 const router: Router = Router();
 

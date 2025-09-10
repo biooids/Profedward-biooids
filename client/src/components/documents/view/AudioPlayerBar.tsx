@@ -115,26 +115,20 @@ export default function AudioPlayerBar() {
       audio.addEventListener("timeupdate", handleTimeUpdate);
       audio.addEventListener("ended", handleAudioEnd);
 
-      if (isPlaying) {
-        audio
-          .play()
-          .catch((e) => console.error("Audio autoplay was prevented:", e));
-      }
+      // REMOVED: The 'if (isPlaying)' block was removed from here.
+      // The third useEffect hook is already responsible for handling play/pause logic.
 
       // --- CRUCIAL CLEANUP FUNCTION ---
-      // This runs when the component unmounts OR when the `audioUrl` dependency changes.
       return () => {
         audio.pause();
         audio.removeEventListener("loadedmetadata", setAudioData);
         audio.removeEventListener("timeupdate", handleTimeUpdate);
         audio.removeEventListener("ended", handleAudioEnd);
-
-        // 4. Revoke the object URL to free up browser memory and prevent leaks.
         URL.revokeObjectURL(audioUrl);
         audioRef.current = null;
       };
     }
-  }, [audioUrl, dispatch]); // Note: isPlaying is handled in a separate, more efficient effect.
+  }, [audioUrl, dispatch]); // The dependency array is now correct
 
   // --- EFFECT #3: Syncing Player State (Play/Pause/Speed) ---
   // This effect syncs the Redux state to the audio element properties.

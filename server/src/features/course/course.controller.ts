@@ -7,7 +7,7 @@ import {
   SetStudentEnrollmentDto,
   UpdateCourseDetailsDto,
 } from "./course.types";
-import { createHttpError } from "@/utils/error.factory";
+import { createHttpError } from "../../utils/error.factory";
 
 class CourseController {
   createCourse = asyncHandler(async (req: Request, res: Response) => {
