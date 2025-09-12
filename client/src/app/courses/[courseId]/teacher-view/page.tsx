@@ -1,13 +1,21 @@
-//src/app/courses/[courseId]/teacher-view/page.tsx
+// src/app/courses/[courseId]/teacher-view/page.tsx
+
+import { use } from "react"; // 1. Import the 'use' hook
 import TeacherCourseDetailView from "@/components/teacher/TeacherCourseDetailView";
 
+// 2. Define 'params' as a Promise
 interface TeacherCourseDetailPageProps {
-  params: { courseId: string };
+  params: Promise<{
+    courseId: string;
+  }>;
 }
 
-// Add 'async' to the function definition
-export default async function TeacherCourseDetailPage({
+// 3. The component is a regular (non-async) function
+export default function TeacherCourseDetailPage({
   params,
 }: TeacherCourseDetailPageProps) {
-  return <TeacherCourseDetailView courseId={params.courseId} />;
+  // 4. Unwrap the promise to get the resolved params
+  const resolvedParams = use(params);
+
+  return <TeacherCourseDetailView courseId={resolvedParams.courseId} />;
 }

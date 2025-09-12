@@ -1,4 +1,7 @@
+//src/lib/user/userTypes.ts
+
 // Enums matching your Prisma Schema
+
 export enum SystemRole {
   USER = "USER",
   DEVELOPER = "DEVELOPER",

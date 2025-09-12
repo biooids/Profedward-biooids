@@ -1,13 +1,16 @@
-//src/app/grade/submission/[submissionId]/student-view/page.tsx
+// src/app/grade/submission/[submissionId]/student-view/page.tsx
 
+import { use } from "react";
 import GradedViewWorkspace from "@/components/student/GradedViewWorkspace";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     submissionId: string;
-  };
+  }>;
 }
 
 export default function GradedSubmissionPage({ params }: PageProps) {
-  return <GradedViewWorkspace submissionId={params.submissionId} />;
+  const resolvedParams = use(params);
+
+  return <GradedViewWorkspace submissionId={resolvedParams.submissionId} />;
 }

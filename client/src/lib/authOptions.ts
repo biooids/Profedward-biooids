@@ -1,5 +1,4 @@
-// src/app/api/auth/[...nextauth]/route.ts
-
+//src/lib/authOptions.ts
 import NextAuth, { NextAuthOptions } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";

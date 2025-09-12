@@ -31,6 +31,7 @@ import {
   LogOut,
   Mail,
   User as UserIcon,
+  LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useFocusOnError } from "@/lib/hooks/useFocusOnError";
+import Link from "next/link";
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -114,12 +116,6 @@ const ProfilePage = () => {
       setUiMessage(null);
     }
   }, [watchedFieldsString, isDirty]);
-
-  useEffect(() => {
-    if (sessionStatus === "unauthenticated") {
-      router.push("/auth/login?callbackUrl=/profile");
-    }
-  }, [sessionStatus, router]);
 
   const profileImageUrl = userProfile?.profileImage;
 
@@ -236,6 +232,26 @@ const ProfilePage = () => {
       <div className="flex justify-center items-center min-h-[80vh]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
+    );
+  }
+  if (sessionStatus === "unauthenticated") {
+    return (
+      <Card className="w-full max-w-lg mx-auto mt-10">
+        <CardHeader>
+          <CardTitle className="text-center">Authentication Required</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center">
+          <p className="text-muted-foreground mb-4">
+            You must be logged in to view your profile.
+          </p>
+          <Button asChild>
+            <Link href="/auth/login">
+              <LogIn className="mr-2 h-4 w-4" />
+              Log In
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
   if (isProfileError) {

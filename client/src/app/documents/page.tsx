@@ -17,7 +17,6 @@ export default function DocumentsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // --- THE FIX: Only fetch data if the user is authenticated ---
   const {
     data: shelves = [],
     isLoading,

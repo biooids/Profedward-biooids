@@ -1,5 +1,4 @@
-//src/app/courses/[courseId]/assignments/new/page.tsx
-
+import { use } from "react"; // 1. Import the 'use' hook
 import CreateAssignmentWorkflow from "@/components/teacher/CreateAssignmentWorkflow";
 import {
   PageHeader,
@@ -10,18 +9,24 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+// 2. Define 'params' as a Promise
 interface NewAssignmentPageProps {
-  params: {
+  params: Promise<{
     courseId: string;
-  };
+  }>;
 }
 
+// 3. The component remains a regular function
 export default function NewAssignmentPage({ params }: NewAssignmentPageProps) {
+  // 4. Unwrap the promise to get the resolved params
+  const resolvedParams = use(params);
+
   return (
     <>
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" className="h-7 w-7" asChild>
-          <Link href={`/courses/${params.courseId}`}>
+          {/* 5. Use the resolved courseId */}
+          <Link href={`/courses/${resolvedParams.courseId}`}>
             <ArrowLeft className="h-4 w-4" />
             <span className="sr-only">Back</span>
           </Link>
@@ -34,7 +39,8 @@ export default function NewAssignmentPage({ params }: NewAssignmentPageProps) {
           </PageHeaderDescription>
         </PageHeader>
       </div>
-      <CreateAssignmentWorkflow courseId={params.courseId} />
+      {/* 5. Use the resolved courseId */}
+      <CreateAssignmentWorkflow courseId={resolvedParams.courseId} />
     </>
   );
 }

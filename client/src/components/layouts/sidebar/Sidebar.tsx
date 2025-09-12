@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react"; // Use next-auth's hook directly
-import { UserRole } from "@/lib/user/userTypes";
+import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Book,
   Home,
@@ -13,13 +15,20 @@ import {
   BookOpen,
   File,
   User,
-  ShieldCheck,
+  LucideProps,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton"; // Import the Skeleton component
+import { ForwardRefExoticComponent, RefAttributes } from "react";
+import { UserRole } from "@/lib/user/userTypes";
 
-const navConfig = {
+type NavLink = {
+  href: string;
+  label: string;
+  icon: ForwardRefExoticComponent<
+    Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+  >;
+};
+
+const navConfig: Record<UserRole, NavLink[]> = {
   [UserRole.GENERAL]: [
     { href: "/", label: "Home", icon: Home },
     { href: "/documents", label: "My Documents", icon: File },
@@ -40,20 +49,18 @@ const navConfig = {
     { href: "/", label: "Home", icon: Home },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/courses", label: "Courses", icon: BookOpen },
-    { href: "/admin/settings", label: "Settings", icon: Settings }, // <-- ADD THIS LINE
+    { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };
 
-const commonLinks = [
+const commonLinks: NavLink[] = [
   { href: "/profile", label: "Profile", icon: User },
-  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const SidebarNav = () => {
   const pathname = usePathname();
-  const { data: session, status } = useSession(); // Get session and status
+  const { data: session, status } = useSession();
 
-  // Show a loading skeleton while the session is being determined
   if (status === "loading") {
     return (
       <div className="grid items-start p-4 text-sm font-medium">
@@ -64,7 +71,8 @@ const SidebarNav = () => {
     );
   }
 
-  const role = session?.user?.userRole ?? UserRole.GENERAL;
+  const role: UserRole = session?.user?.userRole ?? UserRole.GENERAL;
+
   const navLinks = navConfig[role];
 
   return (
