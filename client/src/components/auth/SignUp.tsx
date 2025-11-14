@@ -353,7 +353,7 @@ const SignUp = () => {
                 </div>
               )}
             />
-            <SocialLogin />
+            {/* <SocialLogin /> */}
           </CardContent>
 
           <CardFooter>

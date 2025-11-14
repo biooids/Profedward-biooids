@@ -160,7 +160,7 @@ const LogIn = () => {
               </Alert>
             )}
 
-            <SocialLogin />
+            {/* <SocialLogin /> */}
 
             <div className="space-y-1.5">
               <Label htmlFor="email">Email Address</Label>
